@@ -1,3 +1,2 @@
-﻿# Setup Script By Creeper19472
-create table auth(username, password, authlevel);
+﻿create table auth(username, password, authlevel);
 insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5);
