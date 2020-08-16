@@ -4,24 +4,19 @@ VERSION = "0.3.0a3"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
+### LOGGER MOUDLE STARTS ###
+import logging
+
+logger = logging.getLogger(__name__)
+lfhandler = logging.FileHandler('./cfs-content/log/main.log', encoding='utf-8')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+lfhandler.setLevel(logging.DEBUG)
+lfhandler.setFormatter(formatter)
+logger.addHandler(lfhandler)
+
 sys.path.append('''./cfs-include/''')
 sys.path.append('''./cfs-include/claas/''')
 sys.path.append('''./cfs-include/class/common/''')
-
-# Logger by 公众号python学习开发
-from functools import wraps
-from logger import get_logger
-import traceback
-
-def decorator(func):
-    @wraps(func)
-    def log(*args,**kwargs):
-        try:
-            print("当前运行方法",func.__name__)
-            return func(*args,**kwargs)
-        except Exception as e:
-            get_logger().error(f"{func.__name__} is error,here are details:{traceback.format_exc()}")
-    return log
 
 import colset, letscrypt
 from strFormat import *
@@ -30,7 +25,6 @@ server = socket.socket()
 
 time1 = time.time()
 
-@decorator
 def title():
     print(multicol.Yellow("______________                    _________________     _________"))
     print(multicol.Yellow("__  ____/__  /_____ _________________(_)__  __/__(_)__________  /"))
