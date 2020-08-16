@@ -1,6 +1,6 @@
 ﻿# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.0a3"
+VERSION = "0.3.0a4"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
@@ -16,7 +16,7 @@ cshandler = logging.StreamHandler()
 formatter1 = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 formatter2 = logging.Formatter('[%(asctime)s %(levelname)s] %(message)s')
 lfhandler.setLevel(logging.DEBUG)
-cshandler.setLevel(logging.DEBUG)
+cshandler.setLevel(logging.INFO)
 lfhandler.setFormatter(formatter1)
 cshandler.setFormatter(formatter2)
 logger.addHandler(lfhandler)
@@ -69,6 +69,7 @@ if os.path.exists('_classified_initialized') == False:
         logger.error('The value of the language is invaild.')
         sys.exit()
 
+    logger.debug('Connecting to the database...')
     dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
     dbcursor = dbconn.cursor()
     '''with open('./cfs-content/database/setup', 'r', encoding='utf-8') as scriptfile:
@@ -77,6 +78,7 @@ if os.path.exists('_classified_initialized') == False:
         print(dbconn.total_changes)
         dbconn.commit()
         dbconn.close()''' # CFS-2020081501: Can't run scripts from files.
+    logger.debug('Writes options to the database...')
     try:
         dbcursor.executescript('''
             create table auth(username, password, authlevel);
@@ -97,12 +99,14 @@ if os.path.exists('_classified_initialized') == False:
         x.write('\n')
 
 ### INIT SQLITE3 ###
+logger.debug('Loads options from the database.')
 dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
 dbcursor = dbconn.cursor()
 settings = dict(dbcursor.execute('select key, value from server'))
 dbconn.close()
 ### END SQLITE3 ###
 
+logger.debug('Sets language display.')
 lang = settings['language']
 
 es = gettext.translation(
