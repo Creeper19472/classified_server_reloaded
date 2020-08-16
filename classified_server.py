@@ -4,15 +4,24 @@ VERSION = "0.3.0a3"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
+# os.system('') CFS-2020081601: Can't display custom colors.
+
 ### LOGGER MOUDLE STARTS ###
 import logging
 
 logger = logging.getLogger(__name__)
-lfhandler = logging.FileHandler('./cfs-content/log/main.log', encoding='utf-8')
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger.setLevel(level=logging.DEBUG)
+lfhandler = logging.FileHandler(filename='./cfs-content/log/main.log')
+cshandler = logging.StreamHandler()
+formatter1 = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter2 = logging.Formatter('[%(asctime)s %(levelname)s] %(message)s')
 lfhandler.setLevel(logging.DEBUG)
-lfhandler.setFormatter(formatter)
+cshandler.setLevel(logging.DEBUG)
+lfhandler.setFormatter(formatter1)
+cshandler.setFormatter(formatter2)
 logger.addHandler(lfhandler)
+logger.addHandler(cshandler)
+### LOGGER MOUDLE ENDS ###
 
 sys.path.append('''./cfs-include/''')
 sys.path.append('''./cfs-include/claas/''')
@@ -25,6 +34,7 @@ server = socket.socket()
 
 time1 = time.time()
 
+logger.debug('Defines method title().')
 def title():
     print(multicol.Yellow("______________                    _________________     _________"))
     print(multicol.Yellow("__  ____/__  /_____ _________________(_)__  __/__(_)__________  /"))
@@ -34,13 +44,14 @@ def title():
     print(multicol.Yellow('Classified Server') + multicol.Green(' RELOADED ') + '[%s]' % VERSION)
     print()
 
+logger.debug('Inits multicol.')
 multicol = colset.Colset()
 
 title()
 print('Running On: Python %s' % sys.version)
 
 if os.path.exists('_classified_initialized') == False:
-    print(StrFormat.INFO() + 'The system is initializing, please wait ...')
+    logger.info('The system is initializing...')
     os.chdir('./cfs-content/cert/')
     letscrypt.RSA.CreateNewKey(2048)
     os.chdir('../../')
@@ -55,7 +66,7 @@ if os.path.exists('_classified_initialized') == False:
     try:
         lang = langlist[input('# ')]
     except KeyError:
-        print('Value is invaild.')
+        logger.error('The value of the language is invaild.')
         sys.exit()
 
     dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
@@ -74,10 +85,12 @@ if os.path.exists('_classified_initialized') == False:
             insert into server values('host', '0.0.0.0');
             insert into server values('port', '5104');
             insert into server values('language', '%s');
+            insert into server values('name', 'Classified_Server')
             ''' % lang)
     except:
         pass
-    print('Total Changes: %s.' % dbconn.total_changes)
+    dbcursor.execute('''insert into server values('version', '%s')''' % VERSION)
+    logger.debug('Total Changes: %s.' % dbconn.total_changes)
     dbconn.commit()
     dbconn.close()
     with open("_classified_initialized", "w") as x:
@@ -107,10 +120,10 @@ sqlite3.connect('./cfs-content/database/sqlite3.db')
 server.bind(svcinfo)
 server.listen(15)
 
-print(StrFormat.INFO() + _("Verifying plugin information ..."))
+logger.info(_("Verifying plugin information ..."))
 
 time2 = time.time() - time1
-print(StrFormat.INFO() + _("Done(%ss)!") % time2)
+logger.info(_("Done(%ss)!") % time2)
 
 with open("./cfs-content/cert/e.pem", "rb") as x:
     ekey = x.read()
