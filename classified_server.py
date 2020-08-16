@@ -1,8 +1,8 @@
 ﻿# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.0a2"
+VERSION = "0.3.0a3"
 
-import sys, os, json, socket, sqlite3, rsa, configparser, gettext, time, random, threading, string
+import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
 sys.path.append('''./cfs-include/''')
 sys.path.append('''./cfs-include/claas/''')
@@ -71,15 +71,18 @@ if os.path.exists('_classified_initialized') == False:
             dbcursor.execute(line)
         print(dbconn.total_changes)
         dbconn.commit()
-        dbconn.close()''' # CFS-2020081501 : Can't run scripts from files.
-    dbcursor.executescript('''
-        create table auth(username, password, authlevel);
-        insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5);
-        create table server(key, value);
-        insert into server values('host', '0.0.0.0');
-        insert into server values('port', '5104');
-        insert into server values('language', '%s');
-        ''' % lang)
+        dbconn.close()''' # CFS-2020081501: Can't run scripts from files.
+    try:
+        dbcursor.executescript('''
+            create table auth(username, password, authlevel);
+            insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5);
+            create table server(key, value);
+            insert into server values('host', '0.0.0.0');
+            insert into server values('port', '5104');
+            insert into server values('language', '%s');
+            ''' % lang)
+    except:
+        pass
     print('Total Changes: %s.' % dbconn.total_changes)
     dbconn.commit()
     dbconn.close()
@@ -97,7 +100,7 @@ lang = settings['language']
 
 es = gettext.translation(
         'cfs_server',
-        localedir = 'locale',
+        localedir = 'cfs-content/locale',
         languages = [lang],
         fallback = True
         )
