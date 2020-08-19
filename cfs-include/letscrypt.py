@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+﻿# -*- coding: UTF-8 -*-
 
 from Crypto.Cipher import Blowfish
 import codecs
@@ -49,4 +49,4 @@ class BLOWFISH():
         cl = Blowfish.new(key, Blowfish.MODE_ECB)
         cipher_text = codecs.decode(cipher, 'hex_codec')  # 可以根据自己需要更改hex_codec
         code = json.loads(cl.decrypt(cipher_text))
-        return "%s" % (code)
+        return code

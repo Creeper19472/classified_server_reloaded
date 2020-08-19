@@ -1,2 +1,0 @@
-import tkinter
-tkinter.button()

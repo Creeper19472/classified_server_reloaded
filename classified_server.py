@@ -1,6 +1,6 @@
 ﻿# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.0a4"
+VERSION = "0.3.0b1"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
@@ -24,11 +24,12 @@ logger.addHandler(cshandler)
 ### LOGGER MOUDLE ENDS ###
 
 sys.path.append('''./cfs-include/''')
-sys.path.append('''./cfs-include/claas/''')
+sys.path.append('''./cfs-include/class/''')
 sys.path.append('''./cfs-include/class/common/''')
 
 import colset, letscrypt
 from strFormat import *
+from msgIO import *
 
 server = socket.socket()
 
@@ -121,24 +122,34 @@ svcinfo = (settings['host'], int(settings['port']))
 
 sqlite3.connect('./cfs-content/database/sqlite3.db')
 
-server.bind(svcinfo)
-server.listen(15)
+try:
+    server.bind(svcinfo)
+    server.listen(15)
+except:
+    logger.fatal('There was a problem listening on the port.', exc_info = True)
+    sys.exit()
 
 logger.info(_("Verifying plugin information ..."))
 
-time2 = time.time() - time1
-logger.info(_("Done(%ss)!") % time2)
-
+logger.debug(_('Loads RSA resources.'))
 with open("./cfs-content/cert/e.pem", "rb") as x:
     ekey = x.read()
 with open("./cfs-content/cert/f.pem", "rb") as x:
     fkey = x.read()
+
+time2 = time.time() - time1
+logger.info(_("Done(%ss)!") % time2)
 
 # salt = ''.join(random.sample(string.ascii_letters + string.digits, 8))
 # print(letscrypt.BLOWFISH.Encrypt('aaaaaaa', salt))
 
 while True:
     conn, addr = server.accept() # 等待链接,多个链接的时候就会出现问题,其实返回了两个值
-    ThreadNewName = "Thread-%s" % random.randint(1,10000)
-    NewThread = MainThread(1, ThreadNewName, 1)
-    NewThread.start()
+    logger.debug(_('New connection: %s') % str(addr))
+    ThreadName = "Thread-%s" % random.randint(1,10000)
+    try:
+        Thread = threading.Thread(target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName)
+        Thread.start()
+        logger.debug(_('A new thread %s has started.') % ThreadName)
+    except:
+        logger.warning('Thread %s encountered an exception while running. The thread was forced to close.' % ThreadNewName)

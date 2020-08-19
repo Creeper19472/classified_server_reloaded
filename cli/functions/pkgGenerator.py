@@ -1,21 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-
-class PackagesGenerator:
-    def AuthPackage(account, password):
+class gpkg:
+    def Message(Title, Msg, Code=200):
         Package = {
-            'Code': '11',
-            'Title': 'AuthPackage',
-            'Message': None,
-            'Account': account,
-            'Password': password
-        }
-        return Package
-
-    '''def Message(Title, Msg):
-        Package = {
-            'Code': 200,
+            'Code': code,
             'Title': Title,
             'Message': Msg
-        }
-        return Package'''
+                }
+        return Package

@@ -1,50 +1,32 @@
 # -*- coding: UTF-8 -*-
 
-class PackagesGenerator:
-    def FileNotFound(Msg='File Not Found.'):
+class gpkg:
+    def FileNotFound(Msg='Ooops! File Not Found.'):
         Package = {
-            'Code': '404',
+            'Code': 404,
             'Message': Msg
              }
         return Package
 
     def Forbidden(Msg='Forbidden!'):
         Package = {
-            'Code': '403',
+            'Code': 403,
             'Message': Msg
             }
         return Package
     
-    def InternalServerError(Msg='Sorry, this request is invaild!!'):
+    def BadRequest(Msg='Bad Request'):
         Package = {
-            'Code': '500',
-            'Title': 'Internal Server Error',
+            'Code': 400,
+            'Title': 'Bad_Request',
             'Message': Msg
             }
         return Package
 
-    def LoginRequired():
+    def Message(Title, Msg, Code=200):
         Package = {
-            'Code': '10',
-            'Message': 'LoginRequired'
-            }
-        return Package
-
-    def Encrypt(fkey):
-        Package = {
-            'Code': '310',
-            'fkey': fkey,
-            'Message': None
-            }
-        return Package
-
-    def Message(Title, Msg):
-        Package = {
-            'Code': '200',
+            'Code': Code,
             'Title': Title,
             'Message': Msg
                 }
         return Package
-
-    def Custom(Msg):
-        pass
