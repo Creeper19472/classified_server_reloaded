@@ -3,7 +3,7 @@
 class gpkg:
     def Message(Title, Msg, Code=200):
         Package = {
-            'Code': code,
+            'Code': Code,
             'Title': Title,
             'Message': Msg
                 }
