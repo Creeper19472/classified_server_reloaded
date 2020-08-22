@@ -39,5 +39,6 @@ MsgIO = IO(fkey, salt)
 recv = MsgIO.recv()
 assert recv['Message'] == 'OK'
 
+MsgIO.send(gpkg.gpkg.Message('CMD', 'login aa bb'))
 
 client.close()
