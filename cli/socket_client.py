@@ -37,8 +37,8 @@ client.send(cipher_text)
 MsgIO = IO(fkey, salt)
 
 recv = MsgIO.recv()
-assert recv['Message'] == 'OK'
-
-MsgIO.send(gpkg.gpkg.Message('CMD', 'login aa bb'))
-
+MsgIO.send(gpkg.gpkg.Message('CMD', 'Login aa bb'))
+recv = MsgIO.recv()
+print(recv)
+MsgIO.send(gpkg.gpkg.Message('CMD', 'disconnect'))
 client.close()
