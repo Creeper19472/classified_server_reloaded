@@ -1,4 +1,4 @@
-import socket, sys, random, string, rsa, json
+import socket, sys, random, string, rsa, json, hashlib
 
 sys.path.append('./functions/')
 
@@ -37,7 +37,8 @@ client.send(cipher_text)
 MsgIO = IO(fkey, salt)
 
 recv = MsgIO.recv()
-MsgIO.send(gpkg.gpkg.Message('CMD', 'Login aa bb'))
+SHA256 = hashlib.sha256('123456'.encode()).hexdigest()
+MsgIO.send(gpkg.gpkg.Message('CMD', 'Login master %s' % SHA256))
 recv = MsgIO.recv()
 print(recv)
 MsgIO.send(gpkg.gpkg.Message('CMD', 'disconnect'))

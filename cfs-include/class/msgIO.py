@@ -3,17 +3,16 @@ import pkgGenerator as gpkg
 
 sys.path.append('../')
 sys.path.append('./common/')
+sys.path.append('./api/')
 
 from letscrypt import RSA, BLOWFISH
-import logkit
+import logkit, logio
 
 class ConnThreads():
     def __init__(self, tname, conn, addr, rsa_keys):
         self.thread_name = tname
         self.conn = conn
         self.addr = addr
-        self.account = None
-        self.password = None
         self.rsa_fkey, self.rsa_ekey = rsa_keys
         self.log = logkit.log(logname='Core.Threads.%s' % self.thread_name, filepath='./cfs-content/log/threads.log')
         self.conn.send(self.rsa_fkey) # Send RSA Public Key
@@ -43,28 +42,14 @@ class ConnThreads():
             if splitrecv[0].lower() == 'login':
                 account = splitrecv[1]
                 password = splitrecv[2]
-                self.log.logger.debug('Loads options from the database.')
-                dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
-                dbcursor = dbconn.cursor()
-                users = dbcursor.execute('select username, password, authlevel from auth')
-                for row in users:
-                    if row[0] == account:
-                        PASSWORD = row[1]
-                        self.log.logger.debug('Found user %s, password is %s.' % (account, PASSWORD))
-                        AUTHLEVEL = row[2]
-                        break
-                dbconn.close()
-                if bool(self.password) is False:
-                    self.log.logger.warn('Cannot found user. Login failed.')
-                    self.send(gpkg.gpkg.Message('Login FAILED', 'Incorrect username or password.'))
+                login_action = logio.logIO(self.thread_name, account)
+                if login_action.log_in(password) is False:
+                    self.log.logger.warn('Username or password is incorrect. Login failed.')
+                    self.send(gpkg.gpkg.Message('Login FAILED', 'Incorrect username or password.', 400))
                     continue
-                if password == PASSWORD:
-                    self.account = account
-                    self.password = PASSWORD
-                    self.authlevel = AUTHLEVEL
                 else:
-                    self.log.logger.warn('User %s\'s password is incorrect. Login failed.' % account)
-                    self.send(gpkg.gpkg.Message('Login FAILED', 'Incorrect username or password.'))
+                    self.log.logger.info('User %s\'s password is match. Can login.' % login_action.username)
+                    self.send(gpkg.gpkg.Message('SUCCESS', 'Login Success!'))
             elif splitrecv[0] == "disconnect":
                 self.conn.close()
                 sys.exit()
