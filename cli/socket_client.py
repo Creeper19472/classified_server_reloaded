@@ -4,6 +4,7 @@ sys.path.append('./functions/')
 
 from letscrypt import *
 import pkgGenerator as gpkg
+from userGenerator import Generator
 
 class IO():
     def __init__(self, fkey, bf_key):
@@ -28,18 +29,40 @@ with open('./$.tmp', 'w') as file:
 with open('./$.tmp') as file:
     fkey = rsa.PublicKey.load_pkcs1(file.read())
 
-salt = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+salt = Generator.GeneratePassword(1, 32)
+print(salt)
 
-obj = bytes(json.dumps(salt), encoding='UTF-8')
+obj = bytes(json.dumps(salt[0]), encoding='UTF-8')
 cipher_text = rsa.encrypt(obj, fkey)
 client.send(cipher_text)
 
-MsgIO = IO(fkey, salt)
+MsgIO = IO(fkey, salt[0])
 
 recv = MsgIO.recv()
-SHA256 = hashlib.sha256('123456'.encode()).hexdigest()
-MsgIO.send(gpkg.gpkg.Message('CMD', 'Login master %s' % SHA256))
-recv = MsgIO.recv()
-print(recv)
-MsgIO.send(gpkg.gpkg.Message('CMD', 'disconnect'))
-client.close()
+
+
+while True:
+    cmd = input('# ')
+    if cmd == '':
+        continue
+    split = cmd.split()
+    if split[0].lower() == 'login':
+        try:
+            if not bool(split[2]) is True:
+                print('Exception: Missing args.')
+                continue
+        except:
+            print('Exception: Missing args.')
+            continue
+        SHA256 = hashlib.sha256(split[2].encode()).hexdigest()
+        MsgIO.send(gpkg.gpkg.Message('CMD', 'Login %s %s' % (split[1], SHA256)))
+        print(MsgIO.recv())
+    elif split[0].lower() == 'disconnect':
+        MsgIO.send(gpkg.gpkg.Message('CMD', 'disconnect'))
+        client.close()
+        sys.exit()
+    else:
+        MsgIO.send(gpkg.gpkg.Message('CMD', cmd))
+        recv = MsgIO.recv()
+        print(recv)
+        continue

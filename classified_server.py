@@ -4,11 +4,9 @@ VERSION = "0.3.0b1"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
 
-# os.system('') CFS-2020081601: Can't display custom colors.
-
-sys.path.append('''./cfs-include/''')
-sys.path.append('''./cfs-include/class/''')
-sys.path.append('''./cfs-include/class/common/''')
+sys.path.append('./cfs-include/')
+sys.path.append('./cfs-include/class/')
+sys.path.append('./cfs-include/class/common/')
 
 import colset, letscrypt
 from msgIO import *
@@ -20,7 +18,8 @@ server = socket.socket()
 
 time1 = time.time()
 
-log.logger.debug('Defines method title().')
+log.logger.debug('Setting up the server...')
+
 def title():
     print(multicol.Yellow("______________                    _________________     _________"))
     print(multicol.Yellow("__  ____/__  /_____ _________________(_)__  __/__(_)__________  /"))
@@ -30,7 +29,6 @@ def title():
     print(multicol.Yellow('Classified Server') + multicol.Green(' RELOADED ') + '[%s]' % VERSION)
     print()
 
-log.logger.debug('Inits multicol.')
 multicol = colset.Colset()
 
 title()
@@ -125,12 +123,9 @@ with open("./cfs-content/cert/f.pem", "rb") as x:
 time2 = time.time() - time1
 log.logger.info(_("Done(%ss)!") % time2)
 
-# salt = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-# print(letscrypt.BLOWFISH.Encrypt('aaaaaaa', salt))
-
 while True:
     conn, addr = server.accept() # 等待链接,多个链接的时候就会出现问题,其实返回了两个值
-    log.logger.debug(_('New connection: %s') % str(addr))
+    log.logger.info(_('New connection: %s') % str(addr))
     ThreadName = "Thread-%s" % random.randint(1,10000)
     try:
         Thread = threading.Thread(target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName)

@@ -126,5 +126,5 @@ dmypy.json
 
 # Custom
 _classified_initialized
-./cfs-content/cert/*.pem
-./cfs-content/database/sqlite3.db
+*.pem
+/cfs-content/database/sqlite3.db
