@@ -7,7 +7,6 @@ import logkit
 class logIO():
     def __init__(self, call_name, username):
         self.username = None
-        self.do_login = False
         self.log = logkit.log(logname='Core.Threads.%s.LogIn/Out' % call_name, filepath='./cfs-content/log/threads.log')
         dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
         dbcursor = dbconn.cursor()
@@ -30,7 +29,7 @@ class logIO():
         self.__init__()
 
     def log_in(self, password):
-        if self.do_login == True:
+        if self.login:
             return -1
         if bool(self.username) is False:
             return 2
