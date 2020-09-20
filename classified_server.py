@@ -2,7 +2,12 @@
 
 VERSION = "0.3.0b1"
 
-import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
+import sys
+try:
+    import os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
+except ModuleNotFoundError:
+    print('FATAL: Modules not found. Please run \"pip install -r requirements.txt\" to install these required modules.')
+    sys.exit(1)
 
 sys.path.append('./cfs-include/')
 sys.path.append('./cfs-include/class/')
