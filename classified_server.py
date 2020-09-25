@@ -1,23 +1,22 @@
 ﻿# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.0b1"
+VERSION = "0.3.0b2"
 
 import sys
 try:
-    import os, json, socket, sqlite3, rsa, gettext, time, random, threading, string
+    import os, json, socket, sqlite3, rsa, gettext, time, random, threading
 except ModuleNotFoundError:
     print('FATAL: Modules not found. Please run \"pip install -r requirements.txt\" to install these required modules.')
     sys.exit(1)
 
 sys.path.append('./cfs-include/')
-sys.path.append('./cfs-include/class/')
-sys.path.append('./cfs-include/class/common/')
 
-import colset, letscrypt
-from msgIO import *
+import common.colset as colset
+import letscrypt
+from msgio import *
 
-import logkit
-log = logkit.log(logname='Core', filepath='./cfs-content/log/core.log')
+import common.logkit as logkit
+log = logkit.log(logname='shell', filepath='./cfs-content/log/core.log')
 
 server = socket.socket()
 
@@ -99,7 +98,7 @@ log.logger.debug('Sets language display.')
 lang = settings['language']
 
 es = gettext.translation(
-        'cfs_server',
+        'cfs_server_shell',
         localedir = 'cfs-content/locale',
         languages = [lang],
         fallback = True
