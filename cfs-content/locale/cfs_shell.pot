@@ -1,0 +1,39 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-09-30 21:33+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=cp936\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: E:\Data\classified_server_reloaded\classified_server.py:117
+msgid "Verifying plugin information ..."
+msgstr ""
+
+#: E:\Data\classified_server_reloaded\classified_server.py:119
+msgid "Loads RSA resources."
+msgstr ""
+
+#: E:\Data\classified_server_reloaded\classified_server.py:126
+msgid "Done(%ss)!"
+msgstr ""
+
+#: E:\Data\classified_server_reloaded\classified_server.py:130
+msgid "New connection: %s"
+msgstr ""
+
+#: E:\Data\classified_server_reloaded\classified_server.py:135
+msgid "A new thread %s has started."
+msgstr ""
+
+msgid "Thread %s encountered an exception while running. The thread was forced to close."
+msgstr ""

@@ -6,6 +6,7 @@ from letscrypt import RSA, BLOWFISH
 import common.logkit as logkit
 import filedetect
 
+
 class ConnThreads(threading.Thread):
     def __init__(self, tname, conn, addr, rsa_keys):
         self.thread_name = tname
@@ -45,6 +46,7 @@ class ConnThreads(threading.Thread):
 
     def IOThread(self):
         self.send(gpkg.gpkg.Message('Success', 'OK'))
+        do_login = False
         while True:
             recv = self.recv()
             splitrecv = recv['Message'].split()
@@ -53,32 +55,44 @@ class ConnThreads(threading.Thread):
                 if not len(splitrecv) == 3:
                     self.send(gpkg.gpkg.BadRequest())
                     continue
-                account = splitrecv[1]
+                if do_login == True:
+                    self.log.logger.info('%s: User %s is already logged in.' % (self.addr, username))
+                    self.send(gpkg.gpkg.Message('Already logged in', 'Please logout first.'))
+                    continue
+                username = splitrecv[1]
+                db_username = None
                 password = splitrecv[2]
-                global login_action
-                login_action = logIO(self.thread_name, account)
-                callback = login_action.log_in(password)
-                print(callback)
-                if callback == 0:
-                    self.log.logger.info('%s: User %s\'s password is match. Can login.' % (self.addr, login_action.username))
-                    self.send(gpkg.gpkg.Message('SUCCESS', 'Login Success!'))
-                elif callback == 1:
-                    self.log.logger.warn('%s: User %s\'s password is incorrect. Login failed.' % (self.addr, login_action.username))
+                dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
+                dbcursor = dbconn.cursor()
+                users = dbcursor.execute('select username, password, authlevel from auth')
+                for row in users:
+                    if row[0] == username:
+                        db_username = row[0]
+                        db_password = row[1]
+                        self.log.logger.debug('Found user %s, password is %s.' % (username, db_password))
+                        authlevel = row[2]
+                        break
+                dbconn.close()
+                if db_username == None:
+                    self.log.logger.warn('%s; Username is incorrect. Login failed.'% self.addr)
                     self.send(gpkg.gpkg.Message('Login FAILED', 'Incorrect username or password.', 400))
-                elif callback == -1:
-                    self.send(gpkg.gpkg.Message('Already logged in', 'Already logged in.'))
-                elif callback == 2:
-                    self.log.logger.warn('Username is incorrect. Login failed.')
+                    continue
+                if password == db_password:
+                    self.log.logger.info('%s: User %s\'s password is match. Can login.' % (self.addr, username))
+                    self.send(gpkg.gpkg.Message('SUCCESS', 'Login Success!'))
+                    do_login = True
+                else:
+                    self.log.logger.warn('%s: User %s\'s password is incorrect. Login failed.' % (self.addr, username))
                     self.send(gpkg.gpkg.Message('Login FAILED', 'Incorrect username or password.', 400))
             elif splitrecv[0] == 'getfile':
                 if not len(splitrecv) == 2:
                     self.send(gpkg.gpkg.BadRequest())
                     continue
                 try:
-                    if not login_action.log_in == True:
+                    if not do_login == True:
                         raise PermissionError
                 except PermissionError:
-                    self.send(gpkg.gpkg.Forbidden('You must login first.'))
+                    self.send(gpkg.gpkg.Forbidden('You must to login first.'))
                     continue
                 filename = splitrecv[1]
                 try:
@@ -91,48 +105,13 @@ class ConnThreads(threading.Thread):
                     self.send(gpkg.gpkg.FileNotFound())
                 except (PermissionError, NameError):
                     self.send(gpkg.gpkg.BadRequest())
-
+            elif splitrecv[0] == "logout":
+                if do_login is False:
+                    self.send(self.send(gpkg.gpkg.Message('What?!', 'You must to login first.')))
+                do_login = False
+                self.send(self.send(gpkg.gpkg.Message('OK', 'Successfully logged out.')))
             elif splitrecv[0] == "disconnect":
                 self.conn.close()
                 sys.exit()
             else:
                 self.send(gpkg.gpkg.BadRequest())
-
-class logIO():
-    def __init__(self, call_name, username):
-        self.username = None
-        self.log = logkit.log(logname='Core.Threads.%s.LogIn/Out' % call_name, filepath='./cfs-content/log/threads.log')
-        dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
-        dbcursor = dbconn.cursor()
-        users = dbcursor.execute('select username, password, authlevel from auth')
-        for row in users:
-            if row[0] == username:
-                self.username = username
-                self.password = row[1]
-                self.log.logger.debug('Found user %s, password is %s.' % (self.username, self.password))
-                self.authlevel = row[2]
-                break
-        dbconn.close()
-
-    def log_in(self, password):
-        if self.login:
-            return -1
-        if bool(self.username) is False:
-            return 2
-        if password == self.password:
-            self.do_login = True
-            return 0
-        else:
-            return 1
-
-    def change_password(self, old_password, password):
-        if self.do_login == False:
-            return False
-        if not old_password == password:
-            return False
-        self.password = password
-        dbconn = sqlite3.connect('./cfs-content/database/sqlite3.db')
-        dbcursor = dbconn.cursor()
-        dbcursor.execute('insert into auth %s %s %s' % (self.username, self.password, self.authlevel))
-        dbconn.close()
-

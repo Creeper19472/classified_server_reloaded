@@ -1,6 +1,6 @@
 ﻿# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.0b2"
+VERSION = "0.3.1.371"
 
 import sys
 try:
@@ -43,8 +43,6 @@ if os.path.exists('_classified_initialized') == False:
     os.chdir('./cfs-content/cert/')
     letscrypt.RSA.CreateNewKey(2048)
     os.chdir('../../')
-    import shutil
-    shutil.copyfile('./cfs-include/class/template/config-sample.ini', './config/config.ini')
     langlist = {
         '0': 'en_US',
         '1': 'zh_CN',
@@ -69,8 +67,8 @@ if os.path.exists('_classified_initialized') == False:
     log.logger.debug('Writes options to the database...')
     try:
         dbcursor.executescript('''
-            create table auth(username, password, authlevel);
-            insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5);
+            create table auth(username, password, authlevel, isadmin);
+            insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, 1);
             create table server(key, value);
             insert into server values('host', '0.0.0.0');
             insert into server values('port', '5104');
@@ -118,7 +116,7 @@ except:
 
 log.logger.info(_("Verifying plugin information ..."))
 
-log.logger.debug(_('Loads RSA resources.'))
+log.logger.debug(_("Loads RSA resources."))
 with open("./cfs-content/cert/e.pem", "rb") as x:
     ekey = x.read()
 with open("./cfs-content/cert/f.pem", "rb") as x:
@@ -129,11 +127,8 @@ log.logger.info(_("Done(%ss)!") % time2)
 
 while True:
     conn, addr = server.accept() # 等待链接,多个链接的时候就会出现问题,其实返回了两个值
-    log.logger.info(_('New connection: %s') % str(addr))
+    log.logger.info(_("New connection: %s") % str(addr))
     ThreadName = "Thread-%s" % random.randint(1,10000)
-    try:
-        Thread = threading.Thread(target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName)
-        Thread.start()
-        log.logger.debug(_('A new thread %s has started.') % ThreadName)
-    except:
-        log.logger.warning('Thread %s encountered an exception while running. The thread was forced to close.' % ThreadNewName)
+    Thread = threading.Thread(target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName)
+    Thread.start()
+    log.logger.debug(_("A new thread %s has started." % ThreadName))
