@@ -1,19 +1,18 @@
-Classified Services License
+CFMS Project License
 
-Copyright (c) 2020 Creeper Team
+Copyright (c) 2020 Creeper Team, Version 2
 
-The Classified file management system is an open source, free, and everyone can
-contribute project. Before using the Classified file management system (Hereinafter
-referred to as "this system"), the following regulations should be followed:
+CFMS Project is an open source project that everyone can contribute to. If you
+use this project, it means that you have agreed to the following:
 
-1. Before using this system, regardless of personal or commercial behavior, you
-   must apply to the developer in advance. Unauthorized use behavior we have the
-   right to pursue legal responsibility and not responsible for any losses caused
-   thereby.
+1. It is forbidden to resell any part of this project (including but not limited
+   to source code, preset documents, etc.) to others;
 
-2. Modification and redistribution of this system are allowed, but you must include
-   the original copyright information of this system when redistributing. We have the
-   right to request the infringer to compensate any loss caused by this system.
+2. It is forbidden to modify and redistribute any part of this project without
+   identifying the original author; The redistributed project must comply with
+   the original license, and no changes may be made to the original license.
+   If the project license is changed, it needs to be updated in the next update
+   of the redistributed project;
 
 3. All modules, libraries, sample resources, etc. referenced by the system follow
    their original distribution license.
@@ -35,5 +34,4 @@ referred to as "this system"), the following regulations should be followed:
    of the latest data of the cloud service. It may not be the latest, and we are not 
    responsible for data loss caused by its old version.
 
-When using the Classified file management system, you have accepted all the terms of
-this agreement. WE RESERVE THE RIGHT TO CHANGE THE LICENSE AT ANY TIME WITHOUT NOTICE.
+8. WE RESERVE THE RIGHT TO CHANGE THE LICENSE AT ANY TIME WITHOUT NOTICE.

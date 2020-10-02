@@ -99,7 +99,7 @@ class ConnThreads(threading.Thread):
                     with open('./cfs-content/database/files/%s' % filename) as file:
                         if filename.find('../') != -1:
                             raise PermissionError('The client uses the \'../\' command')
-                        result = filedetect.Blocked.ReplaceBlock(file.read(), login_action.authlevel)
+                        result = filedetect.Blocked.ReplaceBlock(file.read(), authlevel)
                         self.send(gpkg.gpkg.Message('Result', result))
                 except (IsADirectoryError, FileNotFoundError):
                     self.send(gpkg.gpkg.FileNotFound())

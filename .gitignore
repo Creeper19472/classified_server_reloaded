@@ -128,3 +128,4 @@ dmypy.json
 _classified_initialized
 pygettext.py
 .idea/
+*.tmp

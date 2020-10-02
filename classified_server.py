@@ -1,6 +1,6 @@
-﻿# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 
-VERSION = "0.3.1.371"
+VERSION = "0.3.1.373"
 
 import sys
 try:
