@@ -46,6 +46,7 @@ class ConnThreads(threading.Thread):
 
     def IOThread(self):
         self.send(gpkg.gpkg.Message('Success', 'OK'))
+        username = None # Flake8 fix
         do_login = False
         while True:
             recv = self.recv()
