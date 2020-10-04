@@ -4,6 +4,7 @@ import threading
 
 from letscrypt import RSA, BLOWFISH
 import common.logkit as logkit
+import interface.usertools as usertools
 import filedetect
 
 
@@ -106,12 +107,22 @@ class ConnThreads(threading.Thread):
                     self.send(gpkg.gpkg.FileNotFound())
                 except (PermissionError, NameError):
                     self.send(gpkg.gpkg.BadRequest())
-            elif splitrecv[0] == "logout":
+            elif splitrecv[0] == 'logout':
                 if do_login is False:
-                    self.send(self.send(gpkg.gpkg.Message('What?!', 'You must to login first.')))
+                    self.send(gpkg.gpkg.Message('What?!', 'You must to login first.'))
+                    continue
                 do_login = False
-                self.send(self.send(gpkg.gpkg.Message('OK', 'Successfully logged out.')))
-            elif splitrecv[0] == "disconnect":
+                self.send(gpkg.gpkg.Message('OK', 'Successfully logged out.'))
+            elif splitrecv[0] == 'stop':
+                if do_login is False:
+                    self.send(gpkg.gpkg.Message('What?!', 'You must to login first.'))
+                    continue
+                if usertools.isAdmin(username) is True:
+                    self.log.logger.info('Server shutdown has been scheduled!')
+                    self.send(gpkg.gpkg.Message('Scheduled', 'Server shutdown has been scheduled!'))
+                else:
+                    self.send(gpkg.gpkg.Forbidden('You are not an administrator, this command is not for you!'))
+            elif splitrecv[0] == 'disconnect':
                 self.conn.close()
                 sys.exit()
             else:

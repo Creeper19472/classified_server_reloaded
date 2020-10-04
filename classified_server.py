@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.1.373"
+VERSION = "0.3.1.385"
 
 import sys
 try:
@@ -13,10 +13,10 @@ sys.path.append('./cfs-include/')
 
 import common.colset as colset
 import letscrypt
-from msgio import *
+from connsupport import *
 
 import common.logkit as logkit
-log = logkit.log(logname='shell', filepath='./cfs-content/log/core.log')
+log = logkit.log(logname='Core.Shell', filepath='./cfs-content/log/shell.log')
 
 server = socket.socket()
 
