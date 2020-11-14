@@ -9,7 +9,7 @@ class MyWindow(QWizard, Ui_Wizard):
         self.setupUi(self)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWin = MyWindow()
     myWin.show()

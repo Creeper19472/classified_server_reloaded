@@ -1,12 +1,13 @@
 import socket, sys, random, string, rsa, json, hashlib
 
-sys.path.append('./functions/')
+sys.path.append("./functions/")
 
 from letscrypt import *
 import pkgGenerator as gpkg
 from userGenerator import Generator
 
-class IO():
+
+class IO:
     def __init__(self, fkey, bf_key):
         self.rsa_fkey = fkey
         self.blowfish_key = bf_key
@@ -20,19 +21,20 @@ class IO():
         recv = BLOWFISH.Decrypt(bytes_recv, self.blowfish_key)
         return recv
 
+
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliinfo = ("127.0.0.1", 5104)
 client.connect(cliinfo)
 
-with open('./$.tmp', 'w') as file:
+with open("./$.tmp", "w") as file:
     file.write(client.recv(8192).decode())
-with open('./$.tmp') as file:
+with open("./$.tmp") as file:
     fkey = rsa.PublicKey.load_pkcs1(file.read())
 
 salt = Generator.GeneratePassword(1, 32)
 print(salt)
 
-obj = bytes(json.dumps(salt[0]), encoding='UTF-8')
+obj = bytes(json.dumps(salt[0]), encoding="UTF-8")
 cipher_text = rsa.encrypt(obj, fkey)
 client.send(cipher_text)
 
@@ -42,27 +44,27 @@ recv = MsgIO.recv()
 
 
 while True:
-    cmd = input('# ')
-    if cmd == '':
+    cmd = input("# ")
+    if cmd == "":
         continue
     split = cmd.split()
-    if split[0].lower() == 'login':
+    if split[0].lower() == "login":
         try:
             if not bool(split[2]) is True:
-                print('Exception: Missing args.')
+                print("Exception: Missing args.")
                 continue
         except:
-            print('Exception: Missing args.')
+            print("Exception: Missing args.")
             continue
         SHA256 = hashlib.sha256(split[2].encode()).hexdigest()
-        MsgIO.send(gpkg.gpkg.Message('CMD', 'Login %s %s' % (split[1], SHA256)))
+        MsgIO.send(gpkg.gpkg.Message("CMD", "Login %s %s" % (split[1], SHA256)))
         print(MsgIO.recv())
-    elif split[0].lower() == 'disconnect':
-        MsgIO.send(gpkg.gpkg.Message('CMD', 'disconnect'))
+    elif split[0].lower() == "disconnect":
+        MsgIO.send(gpkg.gpkg.Message("CMD", "disconnect"))
         client.close()
         sys.exit()
     else:
-        MsgIO.send(gpkg.gpkg.Message('CMD', cmd))
+        MsgIO.send(gpkg.gpkg.Message("CMD", cmd))
         recv = MsgIO.recv()
         print(recv)
         continue
