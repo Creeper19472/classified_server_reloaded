@@ -65,10 +65,10 @@ class ConnThreads(threading.Thread):
         do_login = False
         while True:
             recv = self.recv()
-            splitrecv = recv["Message"].split()
-            splitrecv[0] = splitrecv[0].lower()
-            if splitrecv[0] == "login":
-                if not len(splitrecv) == 3:
+            args = recv["Message"].split()
+            args[0] = args[0].lower()
+            if args[0] == "login":
+                if not len(args) == 3:
                     self.send(gpkg.gpkg.BadRequest())
                     continue
                 if do_login == True:
@@ -79,9 +79,9 @@ class ConnThreads(threading.Thread):
                         gpkg.gpkg.Message("Already logged in", "Please logout first.")
                     )
                     continue
-                username = splitrecv[1]
+                username = args[1]
                 db_username = None
-                password = splitrecv[2]
+                password = args[2]
                 dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
                 dbcursor = dbconn.cursor()
                 users = dbcursor.execute(
@@ -99,7 +99,7 @@ class ConnThreads(threading.Thread):
                 dbconn.close()
                 if db_username == None:
                     self.log.logger.warn(
-                        "%s; Username is incorrect. Login failed." % self.addr
+                        "%s: Username is incorrect. Login failed." % self.addr
                     )
                     self.send(
                         gpkg.gpkg.Message(
@@ -124,8 +124,8 @@ class ConnThreads(threading.Thread):
                             "Login FAILED", "Incorrect username or password.", 400
                         )
                     )
-            elif splitrecv[0] == "getfile":
-                if not len(splitrecv) == 2:
+            elif args[0] == "getfile":
+                if not len(args) == 2:
                     self.send(gpkg.gpkg.BadRequest())
                     continue
                 try:
@@ -134,7 +134,7 @@ class ConnThreads(threading.Thread):
                 except PermissionError:
                     self.send(gpkg.gpkg.Forbidden("You must to login first."))
                     continue
-                filename = splitrecv[1]
+                filename = args[1]
                 try:
                     with open("./cfs-content/database/files/%s" % filename) as file:
                         if filename.find("../") != -1:
@@ -145,13 +145,25 @@ class ConnThreads(threading.Thread):
                     self.send(gpkg.gpkg.FileNotFound())
                 except (PermissionError, NameError):
                     self.send(gpkg.gpkg.BadRequest())
-            elif splitrecv[0] == "logout":
+            elif args[0] == "user":
+                if not len(args) >= 2:
+                    self.send(gpkg.gpkg.BadRequest())
+                    continue
+                if args[1] == "add":
+                    if usertools.isAdmin(username) is not True:
+                        self.send(
+                            gpkg.gpkg.Forbidden(
+                                "You are not an administrator, this command is not for you!"
+                            )
+                        )
+                    self.send(gpkg.gpkg.Message())
+            elif args[0] == "logout":
                 if do_login is False:
                     self.send(gpkg.gpkg.Message("What?!", "You must to login first."))
                     continue
                 do_login = False
                 self.send(gpkg.gpkg.Message("OK", "Successfully logged out."))
-            elif splitrecv[0] == "stop":
+            elif args[0] == "stop":
                 if do_login is False:
                     self.send(gpkg.gpkg.Message("What?!", "You must to login first."))
                     continue
@@ -168,7 +180,7 @@ class ConnThreads(threading.Thread):
                             "You are not an administrator, this command is not for you!"
                         )
                     )
-            elif splitrecv[0] == "disconnect":
+            elif args[0] == "disconnect":
                 self.conn.close()
                 sys.exit()
             else:
