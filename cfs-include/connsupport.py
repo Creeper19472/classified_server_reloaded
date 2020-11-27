@@ -5,7 +5,7 @@ import threading
 from letscrypt import RSA, BLOWFISH
 import common.logkit as logkit
 import interface.usertools as usertools
-import filedetect
+import replace
 
 
 class ConnThreads(threading.Thread):
@@ -139,7 +139,7 @@ class ConnThreads(threading.Thread):
                     with open("./cfs-content/database/files/%s" % filename) as file:
                         if filename.find("../") != -1:
                             raise PermissionError("The client uses the '../' command")
-                        result = filedetect.Blocked.ReplaceBlock(file.read(), authlevel)
+                        result = replace.replacer.replaceTag("blocked", file.read(), authlevel, "[hidden]")
                         self.send(gpkg.gpkg.Message("Result", result))
                 except (IsADirectoryError, FileNotFoundError):
                     self.send(gpkg.gpkg.FileNotFound())
