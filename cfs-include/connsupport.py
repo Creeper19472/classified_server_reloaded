@@ -1,4 +1,4 @@
-import socket, sys, sqlite3
+import socket, sys, sqlite3, gettext
 import gpkg
 import threading
 
@@ -6,7 +6,6 @@ from letscrypt import RSA, BLOWFISH
 import common.logkit as logkit
 import interface.usertools as usertools
 import replace
-
 
 class ConnThreads(threading.Thread):
     def __init__(self, tname, conn, addr, rsa_keys):
@@ -21,42 +20,51 @@ class ConnThreads(threading.Thread):
         self.run()
 
     def run(self):
+        ### INIT SQLITE3 ###
+        dbconn = sqlite3.connect("cfs-content/database/sqlite3.db")
+        dbcursor = dbconn.cursor()
+        settings = dict(dbcursor.execute("select key, value from server"))
+        dbconn.close()
+        ### END SQLITE3 ###
+        lang = settings["language"]
+        es = gettext.translation("cfs_connsupport", localedir="cfs-content/locale", languages=['zh_CN'], fallback=False)
+        es.install()
         self.conn.send(self.rsa_fkey)  # Send RSA Public Key
         self.bf_key = RSA.Decrypt(self.conn.recv(8192), self.rsa_ekey)
         self.log.logger.debug(
-            "Encryption enabled successfully. Blowfish key: %s." % self.bf_key
+            _("Encryption enabled successfully. Blowfish key: %s.") % self.bf_key
         )
         try:
             self.IOThread()
         except ConnectionResetError:
             self.log.logger.info(
-                "Connection Reset %s. Closing %s." % (self.addr, self.thread_name)
+                _("Connection Reset %s. Closing %s.") % (self.addr, self.thread_name)
             )
             sys.exit()
         except SystemExit:
             self.log.logger.info(
-                "Disconnected from %s. Closing %s." % (self.addr, self.thread_name)
+                _("Disconnected from %s. Closing %s.") % (self.addr, self.thread_name)
             )
             sys.exit()
         except:
             self.log.logger.fatal(
-                "In %s, one (or more) exceptions were caught:" % self.thread_name,
+                _("In %s, one (or more) exceptions were caught:") % self.thread_name,
                 exc_info=True,
             )
             self.log.logger.fatal(
-                "Due to the above exception, this thread cannot continue to run."
+                _("Due to the above exception, this thread cannot continue to run.")
             )
             sys.exit()
 
     def send(self, msg):
-        self.log.logger.debug("Sending message %s." % msg)
+        self.log.logger.debug(_("Sending message %s.") % msg)
         bytes_msg = BLOWFISH.Encrypt(msg, self.bf_key)
         self.conn.send(bytes_msg)
 
     def recv(self, limit=8192):
         cipher_bytes_text = self.conn.recv(limit)
         text = BLOWFISH.Decrypt(cipher_bytes_text, self.bf_key)
-        self.log.logger.debug("Received message %s." % text)
+        self.log.logger.debug(_("Received message %s.") % text)
         return text
 
     def IOThread(self):
@@ -73,7 +81,7 @@ class ConnThreads(threading.Thread):
                     continue
                 if do_login == True:
                     self.log.logger.info(
-                        "%s: User %s is already logged in." % (self.addr, username)
+                        _("%s: User %s is already logged in.") % (self.addr, username)
                     )
                     self.send(
                         gpkg.gpkg.Message("Already logged in", "Please logout first.")
@@ -92,14 +100,14 @@ class ConnThreads(threading.Thread):
                         db_username = row[0]
                         db_password = row[1]
                         self.log.logger.debug(
-                            "Found user %s, password is %s." % (username, db_password)
+                            _("Found user %s, password is %s.") % (username, db_password)
                         )
                         authlevel = row[2]
                         break
                 dbconn.close()
                 if db_username == None:
                     self.log.logger.warn(
-                        "%s: Username is incorrect. Login failed." % self.addr
+                        _("%s: Username is incorrect. Login failed.") % self.addr
                     )
                     self.send(
                         gpkg.gpkg.Message(
@@ -109,14 +117,14 @@ class ConnThreads(threading.Thread):
                     continue
                 if password == db_password:
                     self.log.logger.info(
-                        "%s: User %s's password is match. Can login."
+                        _("%s: User %s's password is match. Can login.")
                         % (self.addr, username)
                     )
                     self.send(gpkg.gpkg.Message("SUCCESS", "Login Success!"))
                     do_login = True
                 else:
                     self.log.logger.warn(
-                        "%s: User %s's password is incorrect. Login failed."
+                        _("%s: User %s's password is incorrect. Login failed.")
                         % (self.addr, username)
                     )
                     self.send(
@@ -138,7 +146,7 @@ class ConnThreads(threading.Thread):
                 try:
                     with open("./cfs-content/database/files/%s" % filename) as file:
                         if filename.find("../") != -1:
-                            raise PermissionError("The client uses the '../' command")
+                            raise PermissionError(_("The client uses the '../' command"))
                         result = replace.replacer.replaceTag("blocked", file.read(), authlevel, "[hidden]")
                         self.send(gpkg.gpkg.Message("Result", result))
                 except (IsADirectoryError, FileNotFoundError):

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.4.732"
+VERSION = "0.3.5.101"
 
 import sys
 
@@ -94,7 +94,7 @@ if os.path.exists("_classified_initialized") == False:
         print(dbconn.total_changes)
         dbconn.commit()
         dbconn.close()"""  # CFS-2020081501: Can't run scripts from files.
-    log.logger.debug("Writes options to the database...")
+    log.logger.debug("Writing options to the database...")
     try:
         dbcursor.executescript(
             """
@@ -118,11 +118,11 @@ if os.path.exists("_classified_initialized") == False:
         x.write("\n")
 
 ### INIT SQLITE3 ###
-log.logger.debug("Loads options from the database.")
 dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
 dbcursor = dbconn.cursor()
 settings = dict(dbcursor.execute("select key, value from server"))
 dbconn.close()
+log.logger.debug("General options loaded: %s" % settings)
 ### END SQLITE3 ###
 
 log.logger.debug("Setting up general settings...")
@@ -130,7 +130,7 @@ lang = settings["language"]
 server_name = settings["name"]
 
 es = gettext.translation(
-    "cfs_server_shell", localedir="cfs-content/locale", languages=[lang], fallback=True
+    "cfs_shell", localedir="cfs-content/locale", languages=[lang], fallback=True
 )
 es.install()
 
@@ -166,4 +166,4 @@ while True:
         target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName
     )
     Thread.start()
-    log.logger.debug(_("A new thread %s has started." % ThreadName))
+    log.logger.debug(_("A new thread %s has started.") % ThreadName)

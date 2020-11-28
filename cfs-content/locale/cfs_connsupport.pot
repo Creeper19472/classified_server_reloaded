@@ -1,0 +1,69 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-11-28 13:58+CST\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: connsupport.py:38
+msgid "Encryption enabled successfully. Blowfish key: %s."
+msgstr ""
+
+#: connsupport.py:44
+msgid "Connection Reset %s. Closing %s."
+msgstr ""
+
+#: connsupport.py:49
+msgid "Disconnected from %s. Closing %s."
+msgstr ""
+
+#: connsupport.py:54
+msgid "In %s, one (or more) exceptions were caught:"
+msgstr ""
+
+#: connsupport.py:58
+msgid "Due to the above exception, this thread cannot continue to run."
+msgstr ""
+
+#: connsupport.py:63
+msgid "Sending message %s."
+msgstr ""
+
+#: connsupport.py:70
+msgid "Received message %s."
+msgstr ""
+
+#: connsupport.py:87
+msgid "%s: User %s is already logged in."
+msgstr ""
+
+#: connsupport.py:106
+msgid "Found user %s, password is %s."
+msgstr ""
+
+#: connsupport.py:113
+msgid "%s: Username is incorrect. Login failed."
+msgstr ""
+
+#: connsupport.py:123
+msgid "%s: User %s's password is match. Can login."
+msgstr ""
+
+#: connsupport.py:130
+msgid "%s: User %s's password is incorrect. Login failed."
+msgstr ""
+
+#: connsupport.py:152
+msgid "The client uses the '../' command"
+msgstr ""
+
