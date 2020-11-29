@@ -1,4 +1,4 @@
-import socket, sys, sqlite3, gettext
+import socket, sys, sqlite3, gettext, json
 import gpkg
 import threading
 
@@ -37,7 +37,7 @@ class ConnThreads(threading.Thread):
         )
         try:
             self.IOThread()
-        except ConnectionResetError:
+        except (ConnectionResetError, json.decoder.JSONDecodeError):
             self.log.logger.info(
                 _("Connection Reset %s. Closing %s.") % (self.addr, self.thread_name)
             )
@@ -171,6 +171,7 @@ class ConnThreads(threading.Thread):
                     self.send(self.gpkg.Message("What?!", "You must to login first."))
                     continue
                 do_login = False
+                self.log.logger.info(_('%s: User %s logged out.') % (self.addr, username))
                 self.send(self.gpkg.Message("OK", "Successfully logged out."))
             elif args[0] == "stop":
                 if do_login is False:

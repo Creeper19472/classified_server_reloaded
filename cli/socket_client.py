@@ -6,6 +6,7 @@ from letscrypt import *
 import pkgGenerator as gpkg
 from userGenerator import Generator
 
+CLIENT_VERSION = 3
 
 class IO:
     def __init__(self, fkey, bf_key):
@@ -41,6 +42,8 @@ client.send(cipher_text)
 MsgIO = IO(fkey, salt[0])
 
 recv = MsgIO.recv()
+if recv['required_client_version'] > CLIENT_VERSION:
+    print('Warning: The server requires a higher version of the client. ')
 
 
 while True:
@@ -58,7 +61,7 @@ while True:
             continue
         SHA256 = hashlib.sha256(split[2].encode()).hexdigest()
         MsgIO.send(gpkg.gpkg.Message("CMD", "Login %s %s" % (split[1], SHA256)))
-        print(MsgIO.recv())
+        print(MsgIO.recv()['Message'])
     elif split[0].lower() == "disconnect":
         MsgIO.send(gpkg.gpkg.Message("CMD", "disconnect"))
         client.close()
@@ -66,5 +69,5 @@ while True:
     else:
         MsgIO.send(gpkg.gpkg.Message("CMD", cmd))
         recv = MsgIO.recv()
-        print(recv)
+        print(recv['Message'])
         continue

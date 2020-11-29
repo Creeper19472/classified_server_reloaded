@@ -5,66 +5,70 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-11-28 13:58+CST\n"
-"PO-Revision-Date: 2020-11-28 14:22+0800\n"
+"POT-Creation-Date: 2020-11-29 12:05+CST\n"
+"PO-Revision-Date: 2020-11-29 12:06+0800\n"
+"Last-Translator: \n"
 "Language-Team: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
 "X-Generator: Poedit 2.2.1\n"
-"Last-Translator: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"Language: zh_CN\n"
 
-#: connsupport.py:38
+#: connsupport.py:36
 msgid "Encryption enabled successfully. Blowfish key: %s."
 msgstr "加密传输启用成功。Blowfish 密钥：%s。"
 
-#: connsupport.py:44
+#: connsupport.py:42
 msgid "Connection Reset %s. Closing %s."
 msgstr "连接重置 %s。正在关闭 %s。"
 
-#: connsupport.py:49
+#: connsupport.py:47
 msgid "Disconnected from %s. Closing %s."
 msgstr "已从 %s 断开连接。正关闭 %s。"
 
-#: connsupport.py:54
+#: connsupport.py:52
 msgid "In %s, one (or more) exceptions were caught:"
 msgstr "在 %s 中，捕获了一个（或多个）异常："
 
-#: connsupport.py:58
+#: connsupport.py:56
 msgid "Due to the above exception, this thread cannot continue to run."
 msgstr "由于上述异常，该线程无法继续运行。"
 
-#: connsupport.py:63
+#: connsupport.py:61
 msgid "Sending message %s."
 msgstr "正发送信息 %s。"
 
-#: connsupport.py:70
+#: connsupport.py:68
 msgid "Received message %s."
 msgstr "已收到信息 %s。"
 
-#: connsupport.py:87
+#: connsupport.py:85
 msgid "%s: User %s is already logged in."
 msgstr "%s：用户 %s 已登录。"
 
-#: connsupport.py:106
+#: connsupport.py:104
 msgid "Found user %s, password is %s."
 msgstr "找到用户 %s，密码为 %s。"
 
-#: connsupport.py:113
+#: connsupport.py:111
 msgid "%s: Username is incorrect. Login failed."
 msgstr "%s：用户名不正确。 登录失败。"
 
-#: connsupport.py:123
+#: connsupport.py:121
 msgid "%s: User %s's password is match. Can login."
 msgstr "%s：用户 %s 的密码匹配。 可以登录。"
 
-#: connsupport.py:130
+#: connsupport.py:128
 msgid "%s: User %s's password is incorrect. Login failed."
 msgstr "%s：用户 %s 的密码不正确。 登录失败。"
 
-#: connsupport.py:152
+#: connsupport.py:150
 msgid "The client uses the '../' command"
 msgstr "客户端使用 ‘../’ 命令"
+
+#: connsupport.py:174
+msgid "%s: User %s logged out."
+msgstr "%s：用户 %s 已登出。"
