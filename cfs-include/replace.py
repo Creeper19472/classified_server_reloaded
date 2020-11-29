@@ -30,6 +30,5 @@ class replacer:
 
 
 if __name__ == "__main__":
-    print(replacer.replaceTag("blocked","<blocked 3>64-7-1502</blocked>", 2, "Fuck"
-        )
-    )
+    print(replacer.replaceTag("blocked","<blocked 3>64-7-1502</blocked>", 2, "Fuck"))
+    print(replacer.replaceTag("example1","<example1 5>187277</example1>!aknsinsins<example1 2>xxx</example1>", 3, "..."))

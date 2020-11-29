@@ -20,15 +20,16 @@ class ConnThreads(threading.Thread):
         self.run()
 
     def run(self):
-        ### INIT SQLITE3 ###
-        dbconn = sqlite3.connect("cfs-content/database/sqlite3.db")
+        dbconn = sqlite3.connect("cfs-content/database/sqlite3.db")  # init sqlite3
         dbcursor = dbconn.cursor()
         settings = dict(dbcursor.execute("select key, value from server"))
         dbconn.close()
-        ### END SQLITE3 ###
-        lang = settings["language"]
-        es = gettext.translation("cfs_connsupport", localedir="cfs-content/locale", languages=['zh_CN'], fallback=False)
+        self.lang = settings["language"]
+        es = gettext.translation("cfs_connsupport", localedir="cfs-content/locale", languages=[self.lang], fallback=True)
         es.install()
+        self.system_info = (settings['name'], settings['version'], 'cfs_master')
+        self.required_client_version = 3
+        self.gpkg = gpkg.GeneratePackage(self.required_client_version, self.system_info)
         self.conn.send(self.rsa_fkey)  # Send RSA Public Key
         self.bf_key = RSA.Decrypt(self.conn.recv(8192), self.rsa_ekey)
         self.log.logger.debug(
@@ -68,7 +69,7 @@ class ConnThreads(threading.Thread):
         return text
 
     def IOThread(self):
-        self.send(gpkg.gpkg.Message("Success", "OK"))
+        self.send(self.gpkg.Message("Success", "OK"))
         username = None  # Flake8 fix
         do_login = False
         while True:
@@ -77,14 +78,14 @@ class ConnThreads(threading.Thread):
             args[0] = args[0].lower()
             if args[0] == "login":
                 if not len(args) == 3:
-                    self.send(gpkg.gpkg.BadRequest())
+                    self.send(self.gpkg.BadRequest())
                     continue
                 if do_login == True:
                     self.log.logger.info(
                         _("%s: User %s is already logged in.") % (self.addr, username)
                     )
                     self.send(
-                        gpkg.gpkg.Message("Already logged in", "Please logout first.")
+                        self.gpkg.Message("Already logged in", "Please logout first.")
                     )
                     continue
                 username = args[1]
@@ -110,7 +111,7 @@ class ConnThreads(threading.Thread):
                         _("%s: Username is incorrect. Login failed.") % self.addr
                     )
                     self.send(
-                        gpkg.gpkg.Message(
+                        self.gpkg.Message(
                             "Login FAILED", "Incorrect username or password.", 400
                         )
                     )
@@ -120,7 +121,7 @@ class ConnThreads(threading.Thread):
                         _("%s: User %s's password is match. Can login.")
                         % (self.addr, username)
                     )
-                    self.send(gpkg.gpkg.Message("SUCCESS", "Login Success!"))
+                    self.send(self.gpkg.Message("SUCCESS", "Login Success!"))
                     do_login = True
                 else:
                     self.log.logger.warn(
@@ -128,19 +129,19 @@ class ConnThreads(threading.Thread):
                         % (self.addr, username)
                     )
                     self.send(
-                        gpkg.gpkg.Message(
+                        self.gpkg.Message(
                             "Login FAILED", "Incorrect username or password.", 400
                         )
                     )
             elif args[0] == "getfile":
                 if not len(args) == 2:
-                    self.send(gpkg.gpkg.BadRequest())
+                    self.send(self.gpkg.BadRequest())
                     continue
                 try:
                     if not do_login == True:
                         raise PermissionError
                 except PermissionError:
-                    self.send(gpkg.gpkg.Forbidden("You must to login first."))
+                    self.send(self.gpkg.Forbidden("You must to login first."))
                     continue
                 filename = args[1]
                 try:
@@ -148,43 +149,43 @@ class ConnThreads(threading.Thread):
                         if filename.find("../") != -1:
                             raise PermissionError(_("The client uses the '../' command"))
                         result = replace.replacer.replaceTag("blocked", file.read(), authlevel, "[hidden]")
-                        self.send(gpkg.gpkg.Message("Result", result))
+                        self.send(self.gpkg.Message("Result", result))
                 except (IsADirectoryError, FileNotFoundError):
-                    self.send(gpkg.gpkg.FileNotFound())
+                    self.send(self.gpkg.FileNotFound())
                 except (PermissionError, NameError):
-                    self.send(gpkg.gpkg.BadRequest())
+                    self.send(self.gpkg.BadRequest())
             elif args[0] == "user":
                 if not len(args) >= 2:
-                    self.send(gpkg.gpkg.BadRequest())
+                    self.send(self.gpkg.BadRequest())
                     continue
                 if args[1] == "add":
                     if usertools.isAdmin(username) is not True:
                         self.send(
-                            gpkg.gpkg.Forbidden(
+                            self.gpkg.Forbidden(
                                 "You are not an administrator, this command is not for you!"
                             )
                         )
-                    self.send(gpkg.gpkg.Message())
+                    self.send(self.gpkg.Message())
             elif args[0] == "logout":
                 if do_login is False:
-                    self.send(gpkg.gpkg.Message("What?!", "You must to login first."))
+                    self.send(self.gpkg.Message("What?!", "You must to login first."))
                     continue
                 do_login = False
-                self.send(gpkg.gpkg.Message("OK", "Successfully logged out."))
+                self.send(self.gpkg.Message("OK", "Successfully logged out."))
             elif args[0] == "stop":
                 if do_login is False:
-                    self.send(gpkg.gpkg.Message("What?!", "You must to login first."))
+                    self.send(self.gpkg.Message("What?!", "You must to login first."))
                     continue
                 if usertools.isAdmin(username) is True:
                     self.log.logger.info("Server shutdown has been scheduled!")
                     self.send(
-                        gpkg.gpkg.Message(
+                        self.gpkg.Message(
                             "Scheduled", "Server shutdown has been scheduled!"
                         )
                     )
                 else:
                     self.send(
-                        gpkg.gpkg.Forbidden(
+                        self.gpkg.Forbidden(
                             "You are not an administrator, this command is not for you!"
                         )
                     )
@@ -192,4 +193,4 @@ class ConnThreads(threading.Thread):
                 self.conn.close()
                 sys.exit()
             else:
-                self.send(gpkg.gpkg.BadRequest())
+                self.send(self.gpkg.BadRequest())
