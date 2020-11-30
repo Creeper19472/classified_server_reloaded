@@ -159,13 +159,49 @@ class ConnThreads(threading.Thread):
                     self.send(self.gpkg.BadRequest())
                     continue
                 if args[1] == "add":
-                    if usertools.isAdmin(username) is not True:
+                    if not len(args) == 4:
+                        self.send(self.gpkg.BadRequest())
+                        continue
+                    if do_login is False:
+                        self.send(self.gpkg.Message("What?!", "You must to login first."))
+                        continue
+                    if usertools.isAdmin(username) is False:
                         self.send(
                             self.gpkg.Forbidden(
                                 "You are not an administrator, this command is not for you!"
                             )
                         )
-                    self.send(self.gpkg.Message())
+                        continue
+                    if usertools.isUserExists(args[2]) is True:
+                        self.send(self.gpkg.BadRequest("Are you serious??"))
+                        continue
+                    if usertools.addUser(args[2], args[3]) is False:
+                        self.send(self.gpkg.Message("Error", "...", Code=500))
+                    else:
+                        self.send(self.gpkg.Message("Success", "Successfully added a new user."))
+                    continue
+                elif args[1] == "remove":
+                    if not len(args) == 3:
+                        self.send(self.gpkg.BadRequest())
+                        continue
+                    if do_login is False:
+                        self.send(self.gpkg.Message("What?!", "You must to login first."))
+                        continue
+                    if usertools.isUserExists(args[2]) is False:
+                        self.send(self.gpkg.BadRequest("The server couldn\'t find the user."))
+                        continue
+                    if usertools.isAdmin(username) is False:
+                        self.send(
+                            self.gpkg.Forbidden(
+                                "You are not an administrator, this command is not for you!"
+                            )
+                        )
+                        continue
+                    if usertools.removeUser(args[2]) is False:
+                        self.send(self.gpkg.Message("Error", "Can\'t remove the user.", Code=500))
+                    else:
+                        self.send(self.gpkg.Message("Success", "Successfully removed the user."))
+
             elif args[0] == "logout":
                 if do_login is False:
                     self.send(self.gpkg.Message("What?!", "You must to login first."))

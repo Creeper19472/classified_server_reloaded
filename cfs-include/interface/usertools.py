@@ -20,7 +20,16 @@ def isAdmin(username):
         return False
 
 
-def add_user(username, password, authlevel=0, isadmin=0):
+def isUserExists(username):
+    dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
+    dbcursor = dbconn.cursor()
+    userslist = dbcursor.execute("select username from auth")
+    for row in userslist:
+        if row[0] == username:
+            return True
+    return False
+
+def addUser(username, password, authlevel=0, isadmin=0):
     dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
     dbcursor = dbconn.cursor()
     userslist = dbcursor.execute("select username from auth")
@@ -28,13 +37,26 @@ def add_user(username, password, authlevel=0, isadmin=0):
         if row[0] == username:
             return False
     dbcursor.execute(
-        """insert into auth values('%s', '%s', %s, %s);""" % username,
-        password,
-        authlevel,
-        isadmin,
-    )
+        """insert into auth values('%s', '%s', %s, %s);""" % (username, password, authlevel, isadmin))
+    dbconn.commit()
     dbconn.close()
     return True
+
+def removeUser(username):
+    dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
+    dbcursor = dbconn.cursor()
+    userslist = dbcursor.execute("select username, isadmin from auth")
+    for row in userslist:
+        if row[0] == username:
+            if row[1] == 1:
+                return False
+            else:
+                break
+    dbcursor.execute("delete from auth where username = '%s'" % username)
+    dbconn.commit()
+    dbconn.close()
+    return True
+    
 
 
 def change_password(username, password):
