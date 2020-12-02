@@ -201,6 +201,33 @@ class ConnThreads(threading.Thread):
                         self.send(self.gpkg.Message("Error", "Can\'t remove the user.", Code=500))
                     else:
                         self.send(self.gpkg.Message("Success", "Successfully removed the user."))
+                elif args[1] == "passwd":
+                    if do_login is False:
+                        self.send(self.gpkg.Message("What?!", "You must to login first."))
+                        continue
+                    if len(args) == 4:
+                        if usertools.isAdmin(username) is False:
+                            self.send(
+                                self.gpkg.Forbidden(
+                                    "You are not an administrator, this command is not for you!"
+                                )
+                            )
+                            continue
+                        if usertools.passwd(args[2], args[3]) is False:
+                            self.send(self.gpkg.Message("Error", "...", Code=500))
+                            continue
+                        else:
+                            self.send(self.gpkg.Message("Success", "Successfully changed the password."))
+                            continue
+                    elif len(args) < 3:
+                        self.send(self.gpkg.BadRequest())
+                        continue
+                    if usertools.passwd(username, args[2]) is False:
+                        self.send(self.gpkg.Message("Error", "...", Code=500))
+                        continue
+                    else:
+                        self.send(self.gpkg.Message("Success", "Successfully changed the password."))                        
+    
 
             elif args[0] == "logout":
                 if do_login is False:

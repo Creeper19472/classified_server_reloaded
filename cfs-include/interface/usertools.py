@@ -57,7 +57,19 @@ def removeUser(username):
     dbconn.close()
     return True
     
-
-
-def change_password(username, password):
-    pass
+def passwd(username, password):
+    db_username = None
+    dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
+    dbcursor = dbconn.cursor()
+    userslist = dbcursor.execute("select username from auth")
+    for row in userslist:
+        if row[0] == username:
+            db_username = row[0]
+            break
+    if db_username == None:
+        return False
+    dbcursor.execute("update auth set password = '%s' where username = '%s'" % (password, username))
+    dbconn.commit()
+    dbconn.close()
+    return True
+    
