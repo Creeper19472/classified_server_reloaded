@@ -37,7 +37,7 @@ def addUser(username, password, authlevel=0, isadmin=0):
         if row[0] == username:
             return False
     dbcursor.execute(
-        """insert into auth values('%s', '%s', %s, %s);""" % (username, password, authlevel, isadmin))
+        """insert into auth values(?, ?, ?, ?);""", (username, password, authlevel, isadmin,))
     dbconn.commit()
     dbconn.close()
     return True
@@ -52,7 +52,7 @@ def removeUser(username):
                 return False
             else:
                 break
-    dbcursor.execute("delete from auth where username = '%s'" % username)
+    dbcursor.execute("delete from auth where username = ?", (username,))
     dbconn.commit()
     dbconn.close()
     return True
@@ -68,7 +68,7 @@ def passwd(username, password):
             break
     if db_username == None:
         return False
-    dbcursor.execute("update auth set password = '%s' where username = '%s'" % (password, username))
+    dbcursor.execute("update auth set password = ? where username = ?", (password, username,))
     dbconn.commit()
     dbconn.close()
     return True

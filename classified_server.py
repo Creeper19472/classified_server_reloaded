@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.7.121"
+VERSION = "0.3.8.001 emergency"
 
 import sys
 

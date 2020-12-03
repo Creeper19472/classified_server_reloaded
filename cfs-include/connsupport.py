@@ -1,4 +1,4 @@
-import socket, sys, sqlite3, gettext, json
+import socket, sys, sqlite3, gettext, json, re
 import gpkg
 import threading
 
@@ -74,7 +74,9 @@ class ConnThreads(threading.Thread):
         do_login = False
         while True:
             recv = self.recv()
-            args = recv["Message"].split()
+            args = recv['Message'].split()
+            for i in range(0, len(args)):
+                args[i] = re.escape(args[i])
             args[0] = args[0].lower()
             if args[0] == "login":
                 if not len(args) == 3:
