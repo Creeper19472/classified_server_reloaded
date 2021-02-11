@@ -6,7 +6,7 @@ from letscrypt import *
 import pkgGenerator as gpkg
 from userGenerator import Generator
 
-CLIENT_VERSION = 3
+CLIENT_VERSION = 4
 
 class IO:
     def __init__(self, fkey, bf_key):

@@ -126,6 +126,5 @@ dmypy.json
 
 # Custom
 _classified_initialized
-pygettext.py
-cfs-content/cert/
+cfs-content/cert/*.pem
 *.tmp

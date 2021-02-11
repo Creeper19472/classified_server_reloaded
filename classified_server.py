@@ -1,30 +1,30 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.8.001 emergency"
+VERSION = "0.3.9.113 alpha"
 
-import sys
+import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
-try:
-    import os, json, socket, sqlite3, rsa, gettext, time, random, threading
-except ModuleNotFoundError:
-    print(
-        'FATAL: Modules not found. Please run "pip install -r requirements.txt" to install these required modules.'
-    )
-    sys.exit(1)
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-sys.path.append("./cfs-include/")
+sys.path.append(''.join((current_dir, '/cfs-include')))
+sys.path.append(''.join((current_dir, '/cfs-include/lib')))
 
-import common.colset as colset
-import letscrypt
-from connsupport import *
+# BEGIN cfs_config.py
+with open('cfs_config.py') as script:
+    exec(script.read())
+# END cfs_config.py
 
-import common.logkit as logkit
+import tool.colset as colset
+import lib.docrypt as letscrypt
+from lib.conn import *
 
-log = logkit.log(logname="Core.Shell", filepath="./cfs-content/log/shell.log")
+import tool.logkit as logkit
+
+log = logkit.log(logname="Loader", filepath=''.join((current_dir, '/cfs-content/log/loader.log')))
 
 server = socket.socket()
 
-time1 = time.time()
+begin_time = time.time()
 
 log.logger.debug("Setting up the server...")
 
@@ -134,19 +134,17 @@ es = gettext.translation(
 )
 es.install()
 
-svcinfo = (settings["host"], int(settings["port"]))
-
 sqlite3.connect("./cfs-content/database/sqlite3.db")
 
 try:
-    server.bind(svcinfo)
+    server.bind(bind4_address)
     server.listen(15)
 except:
     log.logger.fatal("There was a problem listening on the port.", exc_info=True)
     sys.exit()
 
 log.logger.info(_("Server Name: %s") % server_name)
-log.logger.info(_("IPv4 Address: %s:%s") % (svcinfo[0], svcinfo[1]))
+log.logger.info(_("IPv4 Address: {0}").format(bind4_address))
 log.logger.info(_("IPv6 is not supported."))
 
 log.logger.debug(_("Loading RSA resources..."))
@@ -155,8 +153,9 @@ with open("./cfs-content/cert/e.pem", "rb") as x:
 with open("./cfs-content/cert/f.pem", "rb") as x:
     fkey = x.read()
 
-time2 = time.time() - time1
-log.logger.info(_("Done(%ss)!") % time2)
+end_time = time.time()
+total_time = end_time - begin_time
+log.logger.info(_("Done(%ss)!") % total_time)
 
 while True:
     conn, addr = server.accept()  # 等待链接,多个链接的时候就会出现问题,其实返回了两个值
