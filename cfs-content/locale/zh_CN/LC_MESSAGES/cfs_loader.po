@@ -1,0 +1,58 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2021-02-11 13:49+0800\n"
+"PO-Revision-Date: 2021-02-11 13:53+0800\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 2.4.1\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#: .\classified_server.py:141
+msgid "ipv4 and ipv6 are not enabled, what the hell do you want to do?!"
+msgstr "ipv4 和 ipv6 未启用， 你到底想做什么？！"
+
+#: .\classified_server.py:168
+msgid "Server Name: %s"
+msgstr "服务器名称：%s"
+
+#: .\classified_server.py:170
+msgid "IPv4 Address: {0}"
+msgstr "IPv4 地址： {0}"
+
+#: .\classified_server.py:172
+msgid "IPv4 is not supported."
+msgstr "不支持 IPv4。"
+
+#: .\classified_server.py:174
+msgid "IPv6 Address: {0}"
+msgstr "IPv6 地址： {0}"
+
+#: .\classified_server.py:176
+msgid "IPv6 is not supported."
+msgstr "不支持 IPv6。"
+
+#: .\classified_server.py:178
+msgid "Loading RSA resources..."
+msgstr "正在加载 RSA 资源..."
+
+#: .\classified_server.py:186
+msgid "Done(%ss)!"
+msgstr "完成（%s 秒）！"
+
+#: .\classified_server.py:190
+msgid "New connection: %s"
+msgstr "新连接：%s"
+
+#: .\classified_server.py:196
+msgid "A new thread %s has started."
+msgstr "新线程 %s 已经启动。"

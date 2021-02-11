@@ -15,3 +15,6 @@ enable_ipv4 = True
 bind4_address = ('0.0.0.0', 5104)
 # Set the address that the server listens to.
 
+enable_ipv6 = False
+
+bind6_address = ('::', 5104)

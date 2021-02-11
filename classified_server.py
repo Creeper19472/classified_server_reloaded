@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.9.113 alpha"
+VERSION = "0.3.9.113 beta"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
@@ -15,6 +15,7 @@ with open('cfs_config.py') as script:
 # END cfs_config.py
 
 import tool.colset as colset
+from tool.ipv46 import *
 import lib.docrypt as letscrypt
 from lib.conn import *
 
@@ -130,22 +131,49 @@ lang = settings["language"]
 server_name = settings["name"]
 
 es = gettext.translation(
-    "cfs_shell", localedir="cfs-content/locale", languages=[lang], fallback=True
+    "cfs_loader", localedir="cfs-content/locale", languages=[lang], fallback=True
 )
 es.install()
 
 sqlite3.connect("./cfs-content/database/sqlite3.db")
 
+if enable_ipv4 is False and enable_ipv6 is False:
+    log.logger.fatal(_("ipv4 and ipv6 are not enabled, what the hell do you want to do?!"))
+    sys.exit()
+
 try:
-    server.bind(bind4_address)
-    server.listen(15)
+    if enable_ipv4 is True:
+        ipvstatus = IPvStatus(bind4_address[0])
+        if ipvstatus.ipv4():
+            server.bind(bind4_address)
+            server.listen(0)
+        else:
+            enable_ipv4 = False
+    if enable_ipv6 is True:
+        ipvstatus = IPvStatus(bind6_address[0])
+        if ipvstatus.ipv6():
+            server.bind(bind6_address)
+            server.listen(0)
+        else:
+            enable_ipv6 = False
+except socket.error:
+    enable_ipv6 = False
 except:
     log.logger.fatal("There was a problem listening on the port.", exc_info=True)
     sys.exit()
 
+if enable_ipv4 is False and enable_ipv6 is False:
+    raise socket.error('Unable to monitor the specified protocol.')
+
 log.logger.info(_("Server Name: %s") % server_name)
-log.logger.info(_("IPv4 Address: {0}").format(bind4_address))
-log.logger.info(_("IPv6 is not supported."))
+if enable_ipv4:
+    log.logger.info(_("IPv4 Address: {0}").format(bind4_address))
+else:
+    log.logger.info(_("IPv4 is not supported."))
+if enable_ipv6:
+    log.logger.info(_("IPv6 Address: {0}").format(bind6_address))
+else:
+    log.logger.info(_("IPv6 is not supported."))
 
 log.logger.debug(_("Loading RSA resources..."))
 with open("./cfs-content/cert/e.pem", "rb") as x:
