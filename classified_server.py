@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.3.9.113 beta"
+VERSION = "0.4.0.211"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
@@ -74,18 +74,6 @@ if os.path.exists("_classified_initialized") == False:
     os.chdir("./cfs-content/cert/")
     letscrypt.RSA.CreateNewKey(2048)
     os.chdir("../../")
-    langlist = {
-        "0": "en_US",
-        "1": "zh_CN",
-    }
-    print("Please choose a language:")
-    print(langlist)
-    try:
-        lang = langlist[input("# ")]
-    except KeyError:
-        log.logger.error("The value of the language is invaild.")
-        sys.exit()
-
     log.logger.debug("Connecting to the database...")
     dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
     dbcursor = dbconn.cursor()
@@ -99,43 +87,24 @@ if os.path.exists("_classified_initialized") == False:
     try:
         dbcursor.executescript(
             """
-            create table auth(username, password, authlevel, isadmin);
-            insert into auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, 1);
-            create table server(key, value);
-            insert into server values('host', '0.0.0.0');
-            insert into server values('port', '5104');
-            insert into server values('language', '%s');
-            insert into server values('name', 'Classified_Server')
-            """
-            % lang
+            create table {0}auth(username, password, authlevel, isadmin);
+            insert into {0}auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, 1);
+            create table {0}file(id, title, content, protectionlevel);
+            insert into {0}file values(0, 'Example', 'Hello world!', 0);
+            create table {0}options(key, value);
+            insert into {0}options values('protection_text', '[DATA REDACTED]')
+            """.format(database_prefix)
         )
     except:
         pass
-    dbcursor.execute("""insert into server values('version', '%s')""" % VERSION)
     log.logger.debug("Total Changes: %s." % dbconn.total_changes)
     dbconn.commit()
     dbconn.close()
     with open("_classified_initialized", "w") as x:
         x.write("\n")
 
-### INIT SQLITE3 ###
-dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
-dbcursor = dbconn.cursor()
-settings = dict(dbcursor.execute("select key, value from server"))
-dbconn.close()
-log.logger.debug("General options loaded: %s" % settings)
-### END SQLITE3 ###
-
-log.logger.debug("Setting up general settings...")
-lang = settings["language"]
-server_name = settings["name"]
-
-es = gettext.translation(
-    "cfs_loader", localedir="cfs-content/locale", languages=[lang], fallback=True
-)
+es = gettext.translation("cfs_loader", localedir="./cfs-content/locale", languages=[language], fallback=True)
 es.install()
-
-sqlite3.connect("./cfs-content/database/sqlite3.db")
 
 if enable_ipv4 is False and enable_ipv6 is False:
     log.logger.fatal(_("ipv4 and ipv6 are not enabled, what the hell do you want to do?!"))
@@ -165,7 +134,7 @@ except:
 if enable_ipv4 is False and enable_ipv6 is False:
     raise socket.error('Unable to monitor the specified protocol.')
 
-log.logger.info(_("Server Name: %s") % server_name)
+log.logger.info(_("Server Name: %s") % display_name)
 if enable_ipv4:
     log.logger.info(_("IPv4 Address: {0}").format(bind4_address))
 else:
@@ -190,7 +159,7 @@ while True:
     log.logger.info(_("New connection: %s") % str(addr))
     ThreadName = "Thread-%s" % random.randint(1, 10000)
     Thread = threading.Thread(
-        target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)), name=ThreadName
+        target=ConnThreads, args=(ThreadName, conn, addr, (fkey, ekey)),kwargs={'root_dir':current_dir, 'lang': language, 'db_prefix': database_prefix, 'display_name': display_name}, name=ThreadName
     )
     Thread.start()
     log.logger.debug(_("A new thread %s has started.") % ThreadName)

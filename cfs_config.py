@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+display_name = 'Classified Server'
+
 desktop_mode = False
 
 """
@@ -18,3 +20,7 @@ bind4_address = ('0.0.0.0', 5104)
 enable_ipv6 = False
 
 bind6_address = ('::', 5104)
+
+database_prefix = 'cfs_'
+
+language = "zh_CN"
