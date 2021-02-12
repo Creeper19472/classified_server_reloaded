@@ -48,7 +48,7 @@ class usertools:
     def removeUser(self, username):
         dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
         dbcursor = dbconn.cursor()
-        userslist = dbcursor.execute("select username from {0}auth".format(self.db_prefix))
+        userslist = dbcursor.execute("select username, authlevel from {0}auth".format(self.db_prefix))
         for row in userslist:
             if row[0] == username:
                 if row[1] == 1:

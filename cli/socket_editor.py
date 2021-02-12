@@ -10,7 +10,7 @@ from letscrypt import *
 import pkgGenerator as gpkg
 from userGenerator import Generator
 
-CLIENT_VERSION = 4
+CLIENT_VERSION = 5
 
 class IO:
     def __init__(self, fkey, bf_key):
@@ -26,7 +26,7 @@ class IO:
         recv = BLOWFISH.Decrypt(bytes_recv, self.blowfish_key)
         return recv
 
-def usr_log_in():
+def usr_log_in(event):
     usr_name = var_usr_name.get()
     usr_pwd = var_usr_pwd.get()
     SHA256 = hashlib.sha256(usr_pwd.encode()).hexdigest()
@@ -38,12 +38,14 @@ def usr_log_in():
     else:
         Label(window, text='Login failed.').place(x=100, y=170)
 
-def load():
+def load(event):
     filenm = filename.get()
     MsgIO.send(gpkg.gpkg.Message("CMD", "getfile %s" % filenm))
     result = MsgIO.recv()
+    contents.configure(state="normal")
     contents.delete('1.0', END)
     contents.insert(INSERT, result['Message'])
+    contents.configure(state="disabled")
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliinfo = ("127.0.0.1", 5104)
@@ -84,6 +86,7 @@ enter_usr_name.place(x=160, y=100)
 var_usr_pwd = StringVar()
 enter_usr_pwd = Entry(window, textvariable=var_usr_pwd, show='*')
 enter_usr_pwd.place(x=160, y=140)
+enter_usr_pwd.bind("<Return>", usr_log_in)
 
 logged_in = False
 
@@ -101,10 +104,11 @@ top.minsize(650, 500)   # 最小尺寸
 top.maxsize(650, 500)   # 最大尺寸
  
 
-contents = ScrolledText()
+contents = ScrolledText(state='disabled')
 contents.pack(side=BOTTOM, expand=True, fill=BOTH)
 
 filename = Entry()
+filename.bind("<Return>", load)
 filename.pack(side=LEFT, expand=True, fill=X)
 
 Button(text='Open', command=load).pack(side=LEFT)
