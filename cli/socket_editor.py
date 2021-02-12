@@ -26,7 +26,7 @@ class IO:
         recv = BLOWFISH.Decrypt(bytes_recv, self.blowfish_key)
         return recv
 
-def usr_log_in(event):
+def usr_log_in(event=None):
     usr_name = var_usr_name.get()
     usr_pwd = var_usr_pwd.get()
     SHA256 = hashlib.sha256(usr_pwd.encode()).hexdigest()
@@ -38,7 +38,7 @@ def usr_log_in(event):
     else:
         Label(window, text='Login failed.').place(x=100, y=170)
 
-def load(event):
+def load(event=None):
     filenm = filename.get()
     MsgIO.send(gpkg.gpkg.Message("CMD", "getfile %s" % filenm))
     result = MsgIO.recv()

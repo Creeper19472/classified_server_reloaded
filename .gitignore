@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
@@ -127,4 +127,5 @@ dmypy.json
 # Custom
 _classified_initialized
 cfs-content/cert/*.pem
+cfs-content/database/
 *.tmp
