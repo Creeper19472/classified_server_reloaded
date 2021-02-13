@@ -10,7 +10,7 @@ from letscrypt import *
 import pkgGenerator as gpkg
 from userGenerator import Generator
 
-CLIENT_VERSION = 5
+CLIENT_VERSION = 6
 
 class IO:
     def __init__(self, fkey, bf_key):
@@ -30,7 +30,7 @@ def usr_log_in(event=None):
     usr_name = var_usr_name.get()
     usr_pwd = var_usr_pwd.get()
     SHA256 = hashlib.sha256(usr_pwd.encode()).hexdigest()
-    MsgIO.send(gpkg.gpkg.Message("CMD", "Login %s %s" % (usr_name, SHA256)))
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd="login", username=usr_name, password=SHA256))
     if MsgIO.recv()['Code'] == 200:
         global logged_in
         logged_in = True
@@ -40,7 +40,7 @@ def usr_log_in(event=None):
 
 def load(event=None):
     filenm = filename.get()
-    MsgIO.send(gpkg.gpkg.Message("CMD", "getfile %s" % filenm))
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='get', filename=filenm))
     result = MsgIO.recv()
     contents.configure(state="normal")
     contents.delete('1.0', END)

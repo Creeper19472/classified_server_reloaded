@@ -1,13 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.4.0.332"
+VERSION = "0.4.1.214"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(''.join((current_dir, '/cfs-include')))
-sys.path.append(''.join((current_dir, '/cfs-include/lib')))
 
 # BEGIN cfs_config.py
 with open('cfs_config.py') as script:
@@ -16,8 +15,8 @@ with open('cfs_config.py') as script:
 
 import tool.colset as colset
 from tool.ipv46 import *
-import lib.docrypt as letscrypt
-from lib.conn import *
+import slib.docrypt as letscrypt
+from libconn import *
 
 import tool.logkit as logkit
 
