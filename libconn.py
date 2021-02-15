@@ -29,7 +29,7 @@ class ConnThreads(threading.Thread):
         options = dict(dbcursor.execute('select key, value from {0}options'.format(self.db_prefix)))
         dbconn.close()
         self.ptext = options['protection_text']
-        self.system_info = (kwargs['display_name'], '0.3.x', 'cfs_master')
+        self.system_info = (kwargs['display_name'], '0.4.x', 'cfs_master')
         self.run()
 
     def run(self):
@@ -168,21 +168,42 @@ class ConnThreads(threading.Thread):
                         if protectionlevel > authlevel:
                             self.send(self.gpkg.Forbidden(_("The security level required to request the document is higher than the current user level")))
                             continue
-                        result = replace.replacer.replaceTag("blocked", content, authlevel, self.ptext)
+                        if args.get('gettype', None) == 'result' or args.get('gettype', None) == None:
+                            result = replace.replacer.replaceTag("blocked", content, authlevel, self.ptext)
+                        elif args['gettype'] == 'source':
+                            result = content
+                        else:
+                            raise ValueError('Invaild operation')
                         self.send(self.gpkg.Message("Result", result))
                     elif args['action'] == 'post':
-                        pass
+                        filename = args['filename']
+                        ut = usertools.usertools(self.db_prefix)
+                        dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
+                        dbcursor = dbconn.cursor()
+                        files = dbcursor.execute(
+                            "select title, protectionlevel from %s" % "".join((self.db_prefix, 'file'))
+                        )
+                        targetname = None
+                        for row in files:
+                            if row[0] == filename:
+                                targetname = row[0] # set name instead None
+                                protectionlevel = int(row[1])
+                        if targetname == None:
+                            protectionlevel = -1
+                        if ut.isAdmin(username) or authlevel > protectionlevel:
+                            content = args['content']
+                            table_name = "".join((self.db_prefix, 'file'))
+                            dbcursor.execute(f"UPDATE {table_name} SET content=? WHERE title=?;", (content, filename,))
+                            dbconn.commit()
+                            self.send(self.gpkg.Message('OK', 'Update success!'))
+                        else:
+                            self.send(self.gpkg.Forbidden())
+                        dbconn.close()
                     else:
                         self.send(self.gpkg.BadRequest())
-                elif args[0] == "user":
-                    if not len(args) >= 2:
-                        self.send(self.gpkg.BadRequest())
-                        continue
+                elif cmdname == "user":
                     ut = usertools.usertools(self.db_prefix)
-                    if args[1] == "add":
-                        if not len(args) == 4:
-                            self.send(self.gpkg.BadRequest())
-                            continue
+                    if args['action'] == "add":
                         if do_login is False:
                             self.send(self.gpkg.Message("What?!", "You must to login first."))
                             continue
@@ -194,22 +215,19 @@ class ConnThreads(threading.Thread):
                                 )
                             )
                             continue
-                        if ut.isUserExists(args[2]) is True:
+                        if ut.isUserExists(args['username']) is True:
                             self.send(self.gpkg.BadRequest("Are you serious??"))
                             continue
-                        if ut.addUser(args[2], args[3]) is False:
+                        if ut.addUser(args['username'], args['password']) is False:
                             self.send(self.gpkg.Message("Error", "...", Code=500))
                         else:
                             self.send(self.gpkg.Message("Success", "Successfully added a new user."))
                         continue
-                    elif args[1] == "remove":
-                        if not len(args) == 3:
-                            self.send(self.gpkg.BadRequest())
-                            continue
+                    elif args['action'] == "remove":
                         if do_login is False:
                             self.send(self.gpkg.Message("What?!", "You must to login first."))
                             continue
-                        if ut.isUserExists(args[2]) is False:
+                        if ut.isUserExists(args['username']) is False:
                             self.send(self.gpkg.BadRequest("The server couldn\'t find the user."))
                             continue
                         if ut.isAdmin(username) is False:
@@ -219,15 +237,20 @@ class ConnThreads(threading.Thread):
                                 )
                             )
                             continue
-                        if ut.removeUser(args[2]) is False:
+                        if ut.removeUser(args['username']) is False:
                             self.send(self.gpkg.Message("Error", "Can\'t remove the user.", Code=500))
                         else:
                             self.send(self.gpkg.Message("Success", "Successfully removed the user."))
-                    elif args[1] == "passwd":
+                    elif args['action'] == "passwd":
                         if do_login is False:
                             self.send(self.gpkg.Message("What?!", "You must to login first."))
                             continue
-                        if len(args) == 4:
+                        username_exists = True
+                        try:
+                            assert args['username'] != None
+                        except (AssertionError, NameError):
+                            username_exists = False
+                        if username_exists == True:
                             if ut.isAdmin(username) is False:
                                 self.send(
                                     self.gpkg.Forbidden(
@@ -235,20 +258,18 @@ class ConnThreads(threading.Thread):
                                     )
                                 )
                                 continue
-                            if ut.passwd(args[2], args[3]) is False:
+                            if ut.passwd(args['username'], args['password']) is False:
                                 self.send(self.gpkg.Message("Error", "...", Code=500))
                                 continue
                             else:
                                 self.send(self.gpkg.Message("Success", "Successfully changed the password."))
                                 continue
-                        elif len(args) < 3:
-                            self.send(self.gpkg.BadRequest())
-                            continue
-                        if ut.passwd(username, args[2]) is False:
-                            self.send(self.gpkg.Message("Error", "...", Code=500))
-                            continue
                         else:
-                            self.send(self.gpkg.Message("Success", "Successfully changed the password."))
+                            if ut.passwd(username, args[2]) is False:
+                                self.send(self.gpkg.Message("Error", "...", Code=500))
+                                continue
+                            else:
+                                self.send(self.gpkg.Message("Success", "Successfully changed the password."))
                     else:
                         self.send(self.gpkg.BadRequest())
         
@@ -282,7 +303,7 @@ class ConnThreads(threading.Thread):
                     sys.exit()
                 else:
                     self.send(self.gpkg.BadRequest())
-            except NameError:
+            except (NameError, ValueError):
                 self.send(self.gpkg.BadRequest())
                 continue
                 

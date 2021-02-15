@@ -3,6 +3,7 @@
 import socket, sys, random, string, rsa, json, hashlib
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
+import tkinter.messagebox as messagebox
 
 sys.path.append("./functions/")
 
@@ -40,12 +41,20 @@ def usr_log_in(event=None):
 
 def load(event=None):
     filenm = filename.get()
-    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='get', filename=filenm))
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='get', gettype='source', filename=filenm))
     result = MsgIO.recv()
-    contents.configure(state="normal")
     contents.delete('1.0', END)
     contents.insert(INSERT, result['Message'])
-    contents.configure(state="disabled")
+    
+def save(event=None):
+    filenm = filename.get()
+    content = contents.get('1.0', 'end-1c')
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='post', filename=filenm, content=content))
+    result = MsgIO.recv()
+    if result['Code'] != 200:
+        messagebox.showerror('保存失败', '服务器返回以下错误：\n%s' % result['Message'])
+    else:
+        messagebox.showinfo('成功', '服务器无异常')
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliinfo = ("127.0.0.1", 5104)
@@ -104,7 +113,7 @@ top.minsize(650, 500)   # 最小尺寸
 top.maxsize(650, 500)   # 最大尺寸
  
 
-contents = ScrolledText(state='disabled')
+contents = ScrolledText()
 contents.pack(side=BOTTOM, expand=True, fill=BOTH)
 
 filename = Entry()
@@ -112,6 +121,7 @@ filename.bind("<Return>", load)
 filename.pack(side=LEFT, expand=True, fill=X)
 
 Button(text='Open', command=load).pack(side=LEFT)
+Button(text='Save', command=save).pack(side=LEFT)
 
 mainloop()
 

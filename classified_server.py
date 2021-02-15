@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.4.1.214"
+VERSION = "0.4.2.129"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
