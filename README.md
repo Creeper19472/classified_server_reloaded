@@ -8,7 +8,25 @@ Classified Server Reloaded是一个注重安全的档案管理系统服务端，
 QQ讨论组：1040176229
 
 ### 安装
-要开始使用，请克隆master分支的代码并安装必要库，然后运行classified_server.py。
+要开始使用，请执行以下操作：
+
+1. 安装swig
+    - Debian/Ubuntu:
+        `apt install swig`
+    - CentOS:
+        `yum install swig`
+    - Windows:
+        请访问http://swig.org。
+2. 克隆项目代码
+    `git clone https://github.com/creeper19472/classified_server_reloaded`
+
+    *GitHub目前不支持IPv6。*
+3. 安装必要库
+    `pip install -r requirements.txt`
+
+    *可能是pip3。*
+
+之后，以 Python 3.X 运行classified_server.py即可。
 
 ### 协议
 CFMS Project（也称CFMS）可以在非商业用途的情况下自由使用，但请注意我们随时可以收回您的使用权。

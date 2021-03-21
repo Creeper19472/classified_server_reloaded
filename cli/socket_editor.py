@@ -28,15 +28,18 @@ class IO:
         return recv
 
 def usr_log_in(event=None):
+    statusbar.config(text='Getting Information')
     usr_name = var_usr_name.get()
     usr_pwd = var_usr_pwd.get()
     SHA256 = hashlib.sha256(usr_pwd.encode()).hexdigest()
     MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd="login", username=usr_name, password=SHA256))
+    statusbar.config(text='Waiting for response')
     if MsgIO.recv()['Code'] == 200:
         global logged_in
         logged_in = True
         window.destroy()
     else:
+        statusbar.config(text='Failed!')
         Label(window, text='Login failed.').place(x=100, y=170)
 
 def load(event=None):
@@ -45,6 +48,7 @@ def load(event=None):
     result = MsgIO.recv()
     contents.delete('1.0', END)
     contents.insert(INSERT, result['Message'])
+    statusbar.config(text='done')
     
 def save(event=None):
     filenm = filename.get()
@@ -52,8 +56,10 @@ def save(event=None):
     MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='post', filename=filenm, content=content))
     result = MsgIO.recv()
     if result['Code'] != 200:
+        statusbar.config(text='Save failed')
         messagebox.showerror('保存失败', '服务器返回以下错误：\n%s' % result['Message'])
     else:
+        statusbar.config(text='Success')
         messagebox.showinfo('成功', '服务器无异常')
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -102,6 +108,9 @@ logged_in = False
 bt_login = Button(window,text='Login',command=usr_log_in)
 bt_login.place(x=120,y=230)
 
+statusbar = Label(window, text="Ready", bd=1, relief=SUNKEN, anchor=W)
+statusbar.pack(side=BOTTOM, fill=X)
+
 window.mainloop()
 
 if logged_in is False:
@@ -114,14 +123,19 @@ top.maxsize(650, 500)   # 最大尺寸
  
 
 contents = ScrolledText()
-contents.pack(side=BOTTOM, expand=True, fill=BOTH)
+contents.grid(row=1, column=0, columnspan=3)
 
 filename = Entry()
 filename.bind("<Return>", load)
-filename.pack(side=LEFT, expand=True, fill=X)
+filename.grid(row=0, column=0, sticky=W+E)
 
-Button(text='Open', command=load).pack(side=LEFT)
-Button(text='Save', command=save).pack(side=LEFT)
+btn1 = Button(text='Open', command=load)
+btn2 = Button(text='Save', command=save)
+btn1.grid(row=0, column=1, sticky=E)
+btn2.grid(row=0, column=2, sticky=E)
+
+statusbar = Label(top, text="Waiting for input", bd=1, relief=SUNKEN, anchor=W)
+statusbar.grid(row=2, column=0, columnspan=3, sticky=W+E)
 
 mainloop()
 
