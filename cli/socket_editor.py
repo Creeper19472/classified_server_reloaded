@@ -66,6 +66,8 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliinfo = ("127.0.0.1", 5104)
 client.connect(cliinfo)
 
+client.send(bytes("Non-HTTP 1.0 200", encoding="UTF-8"))
+
 with open("./$.tmp", "w") as file:
     file.write(client.recv(8192).decode())
 with open("./$.tmp") as file:

@@ -5,6 +5,9 @@ import threading
 
 sys.path.append('cfs-include/')
 
+if __name__ == '__main__':
+    sys.exit()
+
 from slib.docrypt import RSA, BLOWFISH
 import slib.generator.socketpkg as gpkg
 import slib.parser.replace as replace
@@ -37,6 +40,17 @@ class ConnThreads(threading.Thread):
         es.install()
         self.required_client_version = 6
         self.gpkg = gpkg.GeneratePackage(self.required_client_version, self.system_info)
+        frecv = self.conn.recv(1024)
+        self.log.logger.debug('client request data: %s' % frecv.decode())
+        if 'Non-HTTP' not in frecv.decode():
+            response_start_line = "HTTP/1.1 200 OK\r\n"
+            response_headers = "Server: Classified Server\r\n"
+            response_body = "<p>This server does not support http.</p>"
+            response = response_start_line + response_headers + "\r\n" + response_body
+            self.conn.send(bytes(response, encoding='utf-8'))
+            self.log.logger.info(_('Disconnecting from %s: Unknown request or using HTTP. Closing %s') \
+                                 % (self.addr, self.thread_name))
+            sys.exit()
         self.conn.send(self.rsa_fkey)  # Send RSA Public Key
         self.bf_key = RSA.Decrypt(self.conn.recv(8192), self.rsa_ekey)
         self.log.logger.debug(
@@ -65,14 +79,14 @@ class ConnThreads(threading.Thread):
             sys.exit()
 
     def send(self, msg):
-        self.log.logger.debug(_("Sending message %s.") % msg)
+        self.log.logger.debug(_("Send: %s") % msg)
         bytes_msg = BLOWFISH.Encrypt(msg, self.bf_key)
         self.conn.send(bytes_msg)
 
     def recv(self, limit=8192):
         cipher_bytes_text = self.conn.recv(limit)
         text = BLOWFISH.Decrypt(cipher_bytes_text, self.bf_key)
-        self.log.logger.debug(_("Received message %s.") % text)
+        self.log.logger.debug(_("Get: %s.") % text)
         return text
 
     def IOThread(self):
@@ -281,23 +295,8 @@ class ConnThreads(threading.Thread):
                     do_login = False
                     self.log.logger.info(_('%s: User %s logged out.') % (self.addr, username))
                     self.send(self.gpkg.Message("OK", "Successfully logged out."))
-                elif args[0] == "stop":
-                    if do_login is False:
-                        self.send(self.gpkg.Message("What?!", "You must to login first."))
-                        continue
-                    if ut.isAdmin(username) is True:
-                        self.log.logger.info("Server shutdown has been scheduled!")
-                        self.send(
-                            self.gpkg.Message(
-                                "Scheduled", "Server shutdown has been scheduled!"
-                            )
-                        )
-                    else:
-                        self.send(
-                            self.gpkg.Forbidden(
-                                "You are not an administrator, this command is not for you!"
-                            )
-                        )
+                elif args[0] == "dir":
+                    pass
                 elif args[0] == "disconnect":
                     self.conn.close()
                     sys.exit()
