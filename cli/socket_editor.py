@@ -44,7 +44,7 @@ def usr_log_in(event=None):
 
 def load(event=None):
     filenm = filename.get()
-    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='get', gettype='source', filename=filenm))
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='get', gettype='source', fileid=int(filenm)))
     result = MsgIO.recv()
     contents.delete('1.0', END)
     contents.insert(INSERT, result['Message'])
@@ -53,7 +53,8 @@ def load(event=None):
 def save(event=None):
     filenm = filename.get()
     content = contents.get('1.0', 'end-1c')
-    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='post', filename=filenm, content=content))
+    MsgIO.send(gpkg.gpkg.Message("client/request", "CMD", cmd='file', action='post', fileid=filenm, \
+                                 filedata={'content': content}))
     result = MsgIO.recv()
     if result['Code'] != 200:
         statusbar.config(text='Save failed')
@@ -66,7 +67,7 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliinfo = ("127.0.0.1", 5104)
 client.connect(cliinfo)
 
-client.send(bytes("Non-HTTP 1.0 200", encoding="UTF-8"))
+client.send(bytes("Non-HTTP/1.0 200", encoding="UTF-8"))
 
 with open("./$.tmp", "w") as file:
     file.write(client.recv(8192).decode())
@@ -132,7 +133,7 @@ filename.bind("<Return>", load)
 filename.grid(row=0, column=0, sticky=W+E)
 
 btn1 = Button(text='Open', command=load)
-btn2 = Button(text='Save', command=save)
+btn2 = Button(text='Save', command=save, state=DISABLED)
 btn1.grid(row=0, column=1, sticky=E)
 btn2.grid(row=0, column=2, sticky=E)
 

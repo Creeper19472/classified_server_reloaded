@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-VERSION = "0.4.2.129"
+VERSION = "0.4.3.143"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
 
@@ -86,10 +86,10 @@ if os.path.exists("_classified_initialized") == False:
     try:
         dbcursor.executescript(
             """
-            create table {0}auth(username, password, authlevel, isadmin);
-            insert into {0}auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, 1);
-            create table {0}file(id, title, content, protectionlevel);
-            insert into {0}file values(0, 'Example', 'Hello world!', 0);
+            create table {0}auth(username, password, authlevel, role);
+            insert into {0}auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, 'admin');
+            create table {0}file(id, content, protectionlevel, author);
+            insert into {0}file values(0, 'Hello world!', 0, 'master');
             create table {0}options(key, value);
             insert into {0}options values('protection_text', '[DATA REDACTED]')
             """.format(database_prefix)

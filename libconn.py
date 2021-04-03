@@ -42,14 +42,20 @@ class ConnThreads(threading.Thread):
         self.gpkg = gpkg.GeneratePackage(self.required_client_version, self.system_info)
         frecv = self.conn.recv(1024)
         self.log.logger.debug('client request data: %s' % frecv.decode())
-        if 'Non-HTTP' not in frecv.decode():
+        if 'HTTP/1.1' in frecv.decode():
             response_start_line = "HTTP/1.1 200 OK\r\n"
             response_headers = "Server: Classified Server\r\n"
-            response_body = "<p>This server does not support http.</p>"
+            response_body = _("<p>This server does not support http.</p>")
             response = response_start_line + response_headers + "\r\n" + response_body
             self.conn.send(bytes(response, encoding='utf-8'))
-            self.log.logger.info(_('Disconnecting from %s: Unknown request or using HTTP. Closing %s') \
+            self.log.logger.info(_('Disconnecting from %s: HTTP requests. Closing %s.') \
                                  % (self.addr, self.thread_name))
+            self.conn.close()
+            sys.exit()
+        elif 'Non-HTTP/1.0 200' not in frecv.decode():
+            self.log.logger.info(_('Disconnecting from %s: Unknown request. Closing %s.') \
+                                 % (self.addr, self.thread_name))
+            self.conn.close()
             sys.exit()
         self.conn.send(self.rsa_fkey)  # Send RSA Public Key
         self.bf_key = RSA.Decrypt(self.conn.recv(8192), self.rsa_ekey)
@@ -116,16 +122,17 @@ class ConnThreads(threading.Thread):
                     dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
                     dbcursor = dbconn.cursor()
                     users = dbcursor.execute(
-                        "select username, password, authlevel from %s" % "".join((self.db_prefix, 'auth'))
+                        "select username, password, authlevel, role from {0}auth".format(self.db_prefix)
                     )
                     for row in users:
                         if row[0] == username:
                             db_username = row[0]
                             db_password = row[1]
+                            db_role = row[2]
                             self.log.logger.debug(
-                                _("Found user %s, password is %s.") % (username, db_password)
+                                _("Found user {0}, password: {1}, role: {2}").format(db_username, db_password, db_role)
                             )
-                            authlevel = int(row[2])
+                            db_authlevel = int(row[2])
                             break
                     dbconn.close()
                     if db_username == None:
@@ -144,6 +151,8 @@ class ConnThreads(threading.Thread):
                             % (self.addr, username)
                         )
                         self.send(self.gpkg.Message("SUCCESS", "Login Success!"))
+                        current_role = db_role
+                        authlevel = db_authlevel
                         do_login = True
                     else:
                         self.log.logger.warn(
@@ -160,54 +169,70 @@ class ConnThreads(threading.Thread):
                         if not do_login == True:
                             raise PermissionError
                     except PermissionError:
-                        self.send(self.gpkg.Forbidden("You must to login first."))
+                        self.send(self.gpkg.Forbidden("You must login first."))
                         continue
                     if args['action'] == 'get':
-                        filename = args['filename']
+                        fileid = args['fileid']
                         dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
                         dbcursor = dbconn.cursor()
-                        files = dbcursor.execute(
-                            "select title, content, protectionlevel from %s" % "".join((self.db_prefix, 'file'))
+                        dbfiles = dbcursor.execute(
+                            "select id, content, author, protectionlevel from {0}file".format(self.db_prefix)
                         )
-                        targetname = None
-                        for row in files:
-                            if row[0] == filename:
-                                targetname = row[0] # set name instead None
+                        targetid = None
+                        for row in dbfiles:
+                            if row[0] == fileid:
+                                targetid = row[0] # set name instead None
                                 content = row[1]
-                                protectionlevel = int(row[2])
+                                author = row[2]
+                                protectionlevel = int(row[3]) # patch if type != int
                         dbconn.close()
-                        if targetname == None:
+                        if targetid == None:
                             self.send(self.gpkg.FileNotFound('Ooops! File not found. Please check your input and try again.'))
                             continue
                         if protectionlevel > authlevel:
-                            self.send(self.gpkg.Forbidden(_("The security level required to request the document is higher than the current user level")))
-                            continue
+                            if author != username:
+                                self.send(self.gpkg.Forbidden(_("The security level required to request the document is higher than the current user level")))
+                                continue
                         if args.get('gettype', None) == 'result' or args.get('gettype', None) == None:
                             result = replace.replacer.replaceTag("blocked", content, authlevel, self.ptext)
                         elif args['gettype'] == 'source':
-                            result = content
+                            if author == username:
+                                result = content
+                            elif current_role != 'admin' and current_role != 'editor':
+                                self.send(self.gpkg.Forbidden(_("You are not allowed to modify this file")))
+                                continue
+                            else:
+                                result = content
                         else:
                             raise ValueError('Invaild operation')
                         self.send(self.gpkg.Message("Result", result))
                     elif args['action'] == 'post':
-                        filename = args['filename']
+                        fileid = args['fileid']
+                        filedata = args['filedata']
                         ut = usertools.usertools(self.db_prefix)
                         dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
                         dbcursor = dbconn.cursor()
                         files = dbcursor.execute(
-                            "select title, protectionlevel from %s" % "".join((self.db_prefix, 'file'))
+                            "select id, protectionlevel from {0}file".format(self.db_prefix)
                         )
                         targetname = None
                         for row in files:
-                            if row[0] == filename:
-                                targetname = row[0] # set name instead None
+                            if row[0] == fileid:
+                                targetid = row[0] # set name instead None
                                 protectionlevel = int(row[1])
-                        if targetname == None:
-                            protectionlevel = -1
-                        if ut.isAdmin(username) or authlevel > protectionlevel:
+                        table_name = f"{self.db_prefix}file"
+                        if targetid == None:
+                            if current_role == 'editor' or ut.isAdmin(username):
+                                dbcursor.execute(f"INSERT INTO {table_name} values(?, ?, ?, ?);", \
+                                                 (fileid, '', -1, username))
+                                protectionlevel = -1
+                            else: # send forbidden response
+                                self.send(self.gpkg.Forbidden())
+                                continue
+                        if ut.isAdmin(username) or authlevel >= protectionlevel:
                             content = args['content']
-                            table_name = "".join((self.db_prefix, 'file'))
-                            dbcursor.execute(f"UPDATE {table_name} SET content=? WHERE title=?;", (content, filename,))
+                            dbcursor.execute(f"UPDATE {table_name} SET content=?, authlevel=? WHERE fileid=?;", \
+                                             (filedata['content'], authlevel, fileid,))
                             dbconn.commit()
                             self.send(self.gpkg.Message('OK', 'Update success!'))
                         else:
@@ -219,7 +244,7 @@ class ConnThreads(threading.Thread):
                     ut = usertools.usertools(self.db_prefix)
                     if args['action'] == "add":
                         if do_login is False:
-                            self.send(self.gpkg.Message("What?!", "You must to login first."))
+                            self.send(self.gpkg.Message("What?!", "You must login first."))
                             continue
                         if ut.isAdmin(username) is False:
                             self.log.logger.warn(_("%s: User %s tried to add a new user %s, but did not have the right to do so.") % (self.addr, username, args[2]))
@@ -239,7 +264,7 @@ class ConnThreads(threading.Thread):
                         continue
                     elif args['action'] == "remove":
                         if do_login is False:
-                            self.send(self.gpkg.Message("What?!", "You must to login first."))
+                            self.send(self.gpkg.Message("What?!", "You must login first."))
                             continue
                         if ut.isUserExists(args['username']) is False:
                             self.send(self.gpkg.BadRequest("The server couldn\'t find the user."))
@@ -257,7 +282,7 @@ class ConnThreads(threading.Thread):
                             self.send(self.gpkg.Message("Success", "Successfully removed the user."))
                     elif args['action'] == "passwd":
                         if do_login is False:
-                            self.send(self.gpkg.Message("What?!", "You must to login first."))
+                            self.send(self.gpkg.Message("What?!", "You must login first."))
                             continue
                         username_exists = True
                         try:
@@ -290,7 +315,7 @@ class ConnThreads(threading.Thread):
 
                 elif args[0] == "logout":
                     if do_login is False:
-                        self.send(self.gpkg.Message("What?!", "You must to login first."))
+                        self.send(self.gpkg.Message("What?!", "You must login first."))
                         continue
                     do_login = False
                     self.log.logger.info(_('%s: User %s logged out.') % (self.addr, username))
