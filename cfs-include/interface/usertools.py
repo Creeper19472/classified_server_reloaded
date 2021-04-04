@@ -9,16 +9,16 @@ class usertools:
         db_username = None
         dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
         dbcursor = dbconn.cursor()
-        userslist = dbcursor.execute("select username, isadmin from {0}auth".format(self.db_prefix))
+        userslist = dbcursor.execute("select username, role from {0}auth".format(self.db_prefix))
         for row in userslist:
             if row[0] == username:
                 db_username = row[0]
-                isadmin = row[1]
+                role = row[1]
                 break
         dbconn.close()
         if db_username == None:
             return False
-        if isadmin == 1:
+        if 'admin' in role:
             return True
         else:
             return False
