@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import socket, sys, sqlite3, gettext, json, re
+import socket, sys, sqlite3, gettext, json, re, hashlib
 import threading
 
 sys.path.append('cfs-include/')
@@ -13,6 +13,46 @@ import slib.generator.socketpkg as gpkg
 import slib.parser.replace as replace
 import tool.logkit as logkit
 import interface.usertools as usertools
+
+class Users(object):
+    def __init__(self, username, **kwargs):
+        self.username = str(username)
+        print(kwargs)
+        dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
+        dbcursor = dbconn.cursor()
+        users = dbcursor.execute(
+            "select username, password, userdata from {0}auth".format(kwargs['db_prefix'])
+        )
+        self.user_exists = False
+        self.password = None
+        self.userdata = None
+        for row in users:
+            if row[0] == self.username:
+                self.password = row[1]
+                self.userdata = row[2]
+                self.log.logger.debug(
+                    _("Found user {0}, password: {1}, userdata: {2}").format(row[0], row[1], row[2])
+                )
+                self.user_exists = True
+                break
+        dbconn.close()
+        if self.user_exists == True:
+            self.access_level = int(self.userdata['access_level'])
+            self.role = self.userdata['role']
+
+    def login(self, reqpass):
+        if self.user_exists != True:
+            self.online = False
+        hs = hashlib.md5(self.password[1].encode())
+        hs.update(reqpass.encode())
+        req_return = hs.hexdigest()
+        if req_return == self.password[0]:
+            self.online = True
+        else:
+            self.online = False
+
+    def logout(self):
+        self.online = False
 
 class ConnThreads(threading.Thread):
     def __init__(self, tname, conn, addr, rsa_keys, **kwargs):
@@ -42,7 +82,7 @@ class ConnThreads(threading.Thread):
         self.gpkg = gpkg.GeneratePackage(self.required_client_version, self.system_info)
         frecv = self.conn.recv(1024)
         self.log.logger.debug('client request data: %s' % frecv.decode())
-        if 'HTTP/1.1' in frecv.decode():
+        if ('HTTP/1.1' or "HTTP/2.0") in frecv.decode():
             response_start_line = "HTTP/1.1 200 OK\r\n"
             response_headers = "Server: Classified Server\r\n"
             response_body = _("<p>This server does not support http.</p>")
@@ -108,62 +148,42 @@ class ConnThreads(threading.Thread):
             cmdname = args['cmd']
             try:
                 if cmdname == "login":
-                    if do_login == True:
-                        self.log.logger.info(
-                            _("%s: User %s is already logged in.") % (self.addr, username)
-                        )
-                        self.send(
-                            self.gpkg.Message("Already logged in", "Please logout first.")
-                        )
-                        continue
-                    username = args['username']
-                    db_username = None
-                    password = args['password']
-                    dbconn = sqlite3.connect("./cfs-content/database/sqlite3.db")
-                    dbcursor = dbconn.cursor()
-                    users = dbcursor.execute(
-                        "select username, password, authlevel, role from {0}auth".format(self.db_prefix)
-                    )
-                    for row in users:
-                        if row[0] == username:
-                            db_username = row[0]
-                            db_password = row[1]
-                            db_role = row[2]
-                            self.log.logger.debug(
-                                _("Found user {0}, password: {1}, role: {2}").format(db_username, db_password, db_role)
+                    if 'UserObject' in dir(): # 检查UserObject对象是否被定义
+                        if UserObject.online == True: # 若用户已上线则不操作
+                            self.log.logger.info(
+                                _("%s: User %s is already logged in.") % (self.addr, username)
                             )
-                            db_authlevel = int(row[2])
-                            break
-                    dbconn.close()
-                    if db_username == None:
-                        self.log.logger.warn(
-                            _("%s: Username is incorrect. Login failed.") % self.addr
-                        )
-                        self.send(
-                            self.gpkg.Message(
-                                "Login FAILED", "Incorrect username or password.", 400
+                            self.send(
+                                self.gpkg.Message("Already logged in", "Please logout first.")
                             )
-                        )
-                        continue
-                    if password == db_password:
+                            continue
+                    UserObject = Users(args['username'], db_prefix=self.db_prefix) # 初始化UserObject, 用**kwargs的方式给数据库前缀参数
+                    UserObject.login(args['password'])
+                    if UserObject.online == False:
+                        if UserObject.user_exists != True:
+                            self.log.logger.warn(
+                                _("%s: Username is incorrect. Login failed.") % self.addr
+                            )
+                            self.send(
+                                self.gpkg.Message(
+                                    "Login FAILED", "Incorrect username or password.", 400
+                                )
+                            )
+                        else:
+                            self.log.logger.warn(
+                                _("%s: User %s's password is incorrect. Login failed.") % (self.addr, username)
+                            )
+                            self.send(
+                                self.gpkg.Message(
+                                    "Login FAILED", "Incorrect username or password.", 400
+                                )
+                            )
+                    else:
                         self.log.logger.info(
                             _("%s: User %s's password is match. Can login.")
                             % (self.addr, username)
                         )
                         self.send(self.gpkg.Message("SUCCESS", "Login Success!"))
-                        current_role = db_role
-                        authlevel = db_authlevel
-                        do_login = True
-                    else:
-                        self.log.logger.warn(
-                            _("%s: User %s's password is incorrect. Login failed.")
-                            % (self.addr, username)
-                        )
-                        self.send(
-                            self.gpkg.Message(
-                                "Login FAILED", "Incorrect username or password.", 400
-                            )
-                        )
                 elif cmdname == "file":
                     try:
                         if not do_login == True:

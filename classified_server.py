@@ -3,10 +3,16 @@
 VERSION = "0.4.4.100"
 
 import sys, os, json, socket, sqlite3, rsa, gettext, time, random, threading
+import configparser
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(''.join((current_dir, '/cfs-include')))
+
+# BEGIN ConfigParser
+config = configparser.ConfigParser()
+config.read("cfs-config.ini", encoding="utf-8")
+# END ConfigParser
 
 # BEGIN cfs_config.py
 with open('cfs_config.py') as script:
@@ -81,21 +87,25 @@ if os.path.exists("_classified_initialized") == False:
             dbcursor.execute(line)
         print(dbconn.total_changes)
         dbconn.commit()
-        dbconn.close()"""  # CFS-2020081501: Can't run scripts from files.
+        dbconn.close()"""  # CFS-2020081501: 不能从文件导入执行脚本
     log.logger.debug("Writing options to the database...")
+    inituser_data = bytes(json.dumps({'role': ['admin'], 'access_level': 5}), encoding='utf-8')
+    initarticle_data = bytes(json.dumps({'title': 'Example', 'file_level': '0', 'author': 'master', 'type': 'database/text'}), encoding='utf-8')
+    print(inituser_data)
+    print(initarticle_data)
     try:
         dbcursor.executescript(
             """
-            create table {0}auth(username, password, authlevel, role);
-            insert into {0}auth values('master', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 5, ('admin'));
-            create table {0}file(id, title, content, protectionlevel, author);
-            insert into {0}file values(0, 'Example', 'Hello world!', 0, 'master');
+            create table {0}auth(username, password, userdata);
+            insert into {0}auth values('master', ('8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', '00aa'), b'{"role": ["admin"], "access_level": 5}');
+            create table {0}file(id, content, data);
+            insert into {0}file values(0, 'Hello world!', b'{"title": "Example", "file_level": "0", "author": "master", "type": "database/text"}');
             create table {0}options(key, value);
             insert into {0}options values('protection_text', '[DATA REDACTED]')
             """.format(database_prefix)
         )
     except:
-        pass
+        raise
     log.logger.debug("Total Changes: %s." % dbconn.total_changes)
     dbconn.commit()
     dbconn.close()
@@ -106,7 +116,7 @@ es = gettext.translation("cfs_loader", localedir="./cfs-content/locale", languag
 es.install()
 
 if enable_ipv4 is False and enable_ipv6 is False:
-    log.logger.fatal(_("ipv4 and ipv6 are not enabled, what the hell do you want to do?!"))
+    log.logger.fatal(_("Neither ipv4 nor ipv6 is enabled, what the hell do you want to do?!"))
     sys.exit()
 
 try:
